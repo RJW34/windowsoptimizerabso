@@ -1,0 +1,31 @@
+# Core dependencies
+pywin32>=306          # Windows API access
+wmi>=1.5.1            # WMI interface
+psutil>=5.9.0         # System utilities
+winreg-utils>=1.0.0   # Registry helpers (fallback to builtin winreg)
+
+# GUI
+customtkinter>=5.2.0  # Modern tkinter widgets
+Pillow>=10.0.0        # Image handling
+ttkthemes>=3.2.2      # Additional themes
+
+# CLI
+typer>=0.9.0          # CLI framework (built on Click)
+rich>=13.0.0          # Terminal formatting
+questionary>=2.0.0    # Interactive prompts
+
+# Utilities
+loguru>=0.7.0         # Logging
+pyyaml>=6.0           # Configuration files
+toml>=0.10.2          # TOML config support
+packaging>=23.0       # Version handling
+
+# Development
+pytest>=7.4.0         # Testing
+pytest-cov>=4.1.0     # Coverage
+black>=23.0.0         # Formatting
+ruff>=0.1.0           # Linting
+mypy>=1.5.0           # Type checking
+
+# Optional
+pyinstaller>=6.0.0    # Executable packaging
