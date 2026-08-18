@@ -142,8 +142,8 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | PKG-004 | high | 1 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | Package is named `src` and metadata has placeholders. |
 | PKG-005 | high | 7 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | Version 1.0.0 overstates maturity. |
 | PKG-006 | high | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | README advertises absent GUI/backup/restore/profiles/dirs/commands. |
-| PKG-007 | high | 7 | open | fix | — | — | — | MIT is declared but LICENSE absent; CONTRIBUTING referenced but absent. |
-| PKG-008 | high | 7 | open | implement | — | — | — | No tags/releases/branch protection/dependency alerts/code scanning. |
+| PKG-007 | high | 7 | fixed | fix | tests/test_packaging.py | LICENSE, CONTRIBUTING.md, SECURITY.md | — | MIT is declared but LICENSE absent; CONTRIBUTING referenced but absent. |
+| PKG-008 | high | 7 | partial | implement | .github/workflows/ | CodeQL + pip-audit live; branch protection documented in STATUS_REPORT.md, not applicable from a commit | — | No tags/releases/branch protection/dependency alerts/code scanning. |
 | SEC-001 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Elevated commands rely on PATH. |
 | SEC-002 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | PowerShell source interpolation permits injection. |
 | SEC-003 | critical | 3 | fixed | implement | tests/test_planner.py | phase 2 commit | — | Generic mutation primitives could be exposed to an agent. |

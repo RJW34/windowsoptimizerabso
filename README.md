@@ -120,8 +120,11 @@ python tools/static_baseline_audit.py --root . --output audit.json
 - [`docs/remediation/DECISION_LOG.md`](docs/remediation/DECISION_LOG.md) — where this project
   deviates from the audit's prescription, and why (including one audit finding that did not
   reproduce)
+- [`docs/remediation/STATUS_REPORT.md`](docs/remediation/STATUS_REPORT.md) — what is built, what
+  is not, which acceptance gates pass, and the residual-risk register
 - [`manifests/acceptance_gate_matrix.csv`](manifests/acceptance_gate_matrix.csv) — the blocking
   gates that must pass before any release
+- [`CHANGELOG.md`](CHANGELOG.md) — what changed in this version
 
 ## Disclaimer
 

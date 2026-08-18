@@ -116,3 +116,35 @@ def test_all_source_compiles():
     import compileall
 
     assert compileall.compile_dir(str(REPO / "src"), quiet=2, force=True), "source failed to compile"
+
+
+def test_governance_files_exist():
+    """PKG-007: MIT was declared with no LICENSE, and CONTRIBUTING.md was referenced but absent."""
+    for name in ["LICENSE", "SECURITY.md", "CONTRIBUTING.md", "CHANGELOG.md"]:
+        assert (REPO / name).exists(), f"{name} is missing"
+    assert "MIT" in (REPO / "LICENSE").read_text()
+
+
+def test_readme_documents_only_commands_that_exist():
+    """PKG-006: every command example in the baseline README was fabricated."""
+    import re
+
+    from typer.main import get_command
+
+    from windowsoptimizerabso.cli.app import app
+
+    implemented = set(get_command(app).commands)  # type: ignore[attr-defined]
+
+    # Lines that explicitly document a command as absent are the point, not a violation.
+    lines = [
+        line
+        for line in (REPO / "README.md").read_text().splitlines()
+        if "Not implemented" not in line
+    ]
+    referenced = set(re.findall(r"`winopt ([a-z-]+)", "\n".join(lines)))
+    missing = referenced - implemented
+    assert missing == set(), f"README references commands that do not exist: {sorted(missing)}"
+
+
+def test_changelog_names_the_current_version():
+    assert "0.0.1a1" in (REPO / "CHANGELOG.md").read_text()
