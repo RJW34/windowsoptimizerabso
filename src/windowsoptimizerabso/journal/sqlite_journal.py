@@ -292,7 +292,11 @@ class SqliteJournal:
                                LifecyclePhase.PRESTATE_DURABLE, None, "")
 
         self._connection.execute("PRAGMA wal_checkpoint(FULL)")
-        descriptor = os.open(self.path, os.O_RDONLY)
+        # Read-write, not read-only: on Windows ``os.fsync`` is ``_commit``, which needs a
+        # write-capable handle and raises EBADF on a read-only one. POSIX accepts either, so
+        # opening read-write is the portable form and the only one that works on the target
+        # platform.
+        descriptor = os.open(self.path, os.O_RDWR)
         try:
             os.fsync(descriptor)
         finally:
