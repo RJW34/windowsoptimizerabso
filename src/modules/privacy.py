@@ -4,11 +4,12 @@ Privacy and telemetry control module
 
 from __future__ import annotations
 
-import subprocess
 from pathlib import Path
 from typing import Any, Optional
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 from ..core.engine import (
     OptimizationCategory,
@@ -236,6 +237,7 @@ class PrivacyModule:
 
         hosts_path = Path(r"C:\Windows\System32\drivers\etc\hosts")
         try:
+            guard_mutation(f"overwrite {hosts_path}", legacy=True)
             hosts_path.write_text(data["hosts_backup"])
             return True
         except Exception as e:
@@ -298,10 +300,8 @@ class PrivacyModule:
                     disabled += 1
                     continue
 
-                result = subprocess.run(
+                result = guarded_run(
                     ["schtasks", "/Change", "/TN", task, "/Disable"],
-                    capture_output=True,
-                    text=True,
                     timeout=10,
                 )
 
@@ -361,10 +361,11 @@ class PrivacyModule:
 
             # Append to hosts file
             new_content = original_content + "\n".join(new_entries)
+            guard_mutation(f"append telemetry host blocks to {hosts_path}", legacy=True)
             hosts_path.write_text(new_content)
 
             # Flush DNS cache
-            subprocess.run(["ipconfig", "/flushdns"], capture_output=True, timeout=10)
+            guarded_run(["ipconfig", "/flushdns"], timeout=10)
 
             return OptimizationResult(
                 success=True,
@@ -436,10 +437,8 @@ class PrivacyModule:
         # Count disabled telemetry tasks
         for task in self.TELEMETRY_TASKS:
             try:
-                result = subprocess.run(
+                result = guarded_run(
                     ["schtasks", "/Query", "/TN", task],
-                    capture_output=True,
-                    text=True,
                     timeout=5,
                 )
                 if "Disabled" in result.stdout:

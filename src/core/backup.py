@@ -7,7 +7,6 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
-import subprocess
 import tempfile
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -16,6 +15,8 @@ from typing import Any, Optional
 from enum import Enum, auto
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 
 class BackupType(Enum):
@@ -197,12 +198,14 @@ class BackupManager:
 
         try:
             # Use reg.exe to export
-            result = subprocess.run(
+            result = guarded_run(
                 ["reg", "export", key_path, str(backup_path), "/y"],
-                capture_output=True,
-                text=True,
                 timeout=60,
             )
+
+            if result.timed_out:
+                logger.error(f"Registry export timed out: {key_path}")
+                return None
 
             if result.returncode != 0:
                 logger.error(f"Registry export failed: {result.stderr}")
@@ -223,9 +226,6 @@ class BackupManager:
             logger.debug(f"Backed up registry key: {key_path}")
             return entry
 
-        except subprocess.TimeoutExpired:
-            logger.error(f"Registry export timed out: {key_path}")
-            return None
         except Exception as e:
             logger.error(f"Error backing up registry: {e}")
             return None
@@ -241,10 +241,8 @@ class BackupManager:
             return False
 
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["reg", "import", str(entry.path)],
-                capture_output=True,
-                text=True,
                 timeout=60,
             )
 
@@ -275,18 +273,14 @@ class BackupManager:
 
         try:
             # Get service configuration
-            qc_result = subprocess.run(
+            qc_result = guarded_run(
                 ["sc", "qc", service_name],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
             # Get service status
-            query_result = subprocess.run(
+            query_result = guarded_run(
                 ["sc", "query", service_name],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
@@ -367,12 +361,17 @@ class BackupManager:
             logger.error("Entry is not a file backup")
             return False
 
-        original_path = Path(entry.metadata.get("original_path", ""))
-        if not original_path:
+        # BAK-007: Path("") is PosixPath("."), which is truthy, so the original guard never fired
+        # and a backup with no recorded origin would have been restored over the working directory.
+        original_str = entry.metadata.get("original_path", "")
+        if not original_str:
             logger.error("Original path not found in backup metadata")
             return False
+        original_path = Path(original_str)
 
         try:
+            guard_mutation(f"restore file over {original_path}", legacy=True)
+
             # Create backup of current state first
             if original_path.exists():
                 temp_backup = original_path.with_suffix(original_path.suffix + ".rollback")
@@ -398,10 +397,8 @@ class BackupManager:
         backup_path = self.tasks_dir / f"{entry_id}_{safe_name}.xml"
 
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["schtasks", "/Query", "/TN", task_name, "/XML"],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
@@ -437,16 +434,30 @@ class BackupManager:
         Requires administrator privileges and System Protection enabled.
         """
         try:
-            # PowerShell command to create restore point
-            ps_command = f'''
-            Checkpoint-Computer -Description "{description}" -RestorePointType "MODIFY_SETTINGS"
-            '''
+            # SEC-002/BAK-011: the description used to be interpolated straight into a PowerShell
+            # string, so a description containing a double quote could close the literal and append
+            # arbitrary commands to an elevated shell. The description is now passed out of band in
+            # the child environment and read as $env:..., so it never reaches a parser. Appending it
+            # to the -Command argument instead would not be safe: PowerShell concatenates trailing
+            # arguments into the command text rather than binding them as parameters.
+            if not description or len(description) > 255 or any(c in description for c in "\r\n\0"):
+                logger.error("Restore point description is empty, too long, or contains newlines")
+                return False
 
-            result = subprocess.run(
-                ["powershell", "-Command", ps_command],
-                capture_output=True,
-                text=True,
+            script = (
+                "Checkpoint-Computer "
+                "-Description $env:WINOPT_RESTORE_POINT_DESCRIPTION "
+                "-RestorePointType 'MODIFY_SETTINGS'"
+            )
+            result = guarded_run(
+                [
+                    "powershell",
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command", script,
+                ],
                 timeout=120,
+                extra_env={"WINOPT_RESTORE_POINT_DESCRIPTION": description},
             )
 
             if result.returncode == 0:

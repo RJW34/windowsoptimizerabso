@@ -4,13 +4,14 @@ Registry management utilities for Windows optimization
 
 from __future__ import annotations
 
-import subprocess
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Any, Optional, Union
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 # winreg is only available on Windows
 try:
@@ -206,6 +207,8 @@ class RegistryManager:
         Returns:
             True if successful
         """
+        guard_mutation(f"registry write {full_path}\\{value_name} = {data!r}", legacy=True)
+
         if not HAS_WINREG:
             logger.error("winreg not available")
             return False
@@ -234,6 +237,8 @@ class RegistryManager:
 
     def delete_value(self, full_path: str, value_name: str) -> bool:
         """Delete a registry value"""
+        guard_mutation(f"registry delete value {full_path}\\{value_name}", legacy=True)
+
         if not HAS_WINREG:
             return False
 
@@ -251,6 +256,8 @@ class RegistryManager:
 
     def delete_key(self, full_path: str) -> bool:
         """Delete a registry key (must be empty)"""
+        guard_mutation(f"registry delete key {full_path}", legacy=True)
+
         if not HAS_WINREG:
             return False
 
@@ -330,10 +337,8 @@ class RegistryManager:
     def export_key(self, full_path: str, output_file: Path) -> bool:
         """Export a registry key to .reg file using reg.exe"""
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["reg", "export", full_path, str(output_file), "/y"],
-                capture_output=True,
-                text=True,
                 timeout=60,
             )
             return result.returncode == 0
@@ -344,10 +349,8 @@ class RegistryManager:
     def import_key(self, reg_file: Path) -> bool:
         """Import a .reg file using reg.exe"""
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["reg", "import", str(reg_file)],
-                capture_output=True,
-                text=True,
                 timeout=60,
             )
             return result.returncode == 0

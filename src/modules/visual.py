@@ -4,7 +4,6 @@ Visual effects and UI performance optimization module
 
 from __future__ import annotations
 
-import subprocess
 from typing import Any
 
 from loguru import logger

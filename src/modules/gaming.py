@@ -4,10 +4,11 @@ Gaming and performance optimization module
 
 from __future__ import annotations
 
-import subprocess
 from typing import Any
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 from ..core.engine import (
     OptimizationCategory,
@@ -244,17 +245,14 @@ class GamingModule:
                 )
 
             # Try to enable Ultimate Performance plan first (hidden by default)
-            subprocess.run(
+            guarded_run(
                 ["powercfg", "-duplicatescheme", "e9a42b02-d5df-448d-aa00-03f14749eb61"],
-                capture_output=True,
                 timeout=10,
             )
 
             # Get available power plans
-            result = subprocess.run(
+            result = guarded_run(
                 ["powercfg", "/list"],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
 
@@ -276,9 +274,8 @@ class GamingModule:
                 plan_guid = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"
 
             # Set the power plan
-            result = subprocess.run(
+            result = guarded_run(
                 ["powercfg", "/setactive", plan_guid],
-                capture_output=True,
                 timeout=10,
             )
 
@@ -346,9 +343,8 @@ class GamingModule:
         for svc in nvidia_services:
             try:
                 if not self.dry_run:
-                    subprocess.run(
+                    guarded_run(
                         ["sc", "config", svc, "start=", "disabled"],
-                        capture_output=True,
                         timeout=10,
                     )
             except Exception:
@@ -396,10 +392,8 @@ class GamingModule:
 
         # Check power plan
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["powercfg", "/getactivescheme"],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
             if result.returncode == 0:

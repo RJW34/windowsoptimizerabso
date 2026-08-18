@@ -4,12 +4,13 @@ Windows service management for optimization
 
 from __future__ import annotations
 
-import subprocess
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 
 class ServiceStartType(Enum):
@@ -151,18 +152,14 @@ class ServiceManager:
         """Get information about a specific service"""
         try:
             # Query service config
-            qc_result = subprocess.run(
+            qc_result = guarded_run(
                 ["sc", "qc", name],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
 
             # Query service status
-            query_result = subprocess.run(
+            query_result = guarded_run(
                 ["sc", "query", name],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
 
@@ -240,10 +237,8 @@ class ServiceManager:
         services = []
 
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["sc", "query", "state=", "all"],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
@@ -278,10 +273,8 @@ class ServiceManager:
             return False
 
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["sc", "config", name, "start=", start_type.value],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
 
@@ -299,10 +292,8 @@ class ServiceManager:
     def start_service(self, name: str) -> bool:
         """Start a service"""
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["sc", "start", name],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
@@ -325,10 +316,8 @@ class ServiceManager:
             return False
 
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["sc", "stop", name],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
@@ -407,10 +396,8 @@ class ServiceManager:
     def get_dependencies(self, name: str) -> list[str]:
         """Get services that this service depends on"""
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["sc", "qc", name],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
 
@@ -437,10 +424,8 @@ class ServiceManager:
     def get_dependents(self, name: str) -> list[str]:
         """Get services that depend on this service"""
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["sc", "enumdepend", name],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
 

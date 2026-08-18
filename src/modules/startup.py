@@ -5,12 +5,13 @@ Startup optimization module
 from __future__ import annotations
 
 import os
-import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 from ..core.engine import (
     OptimizationCategory,
@@ -191,10 +192,8 @@ class StartupModule:
         items = []
 
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["schtasks", "/Query", "/FO", "CSV", "/V"],
-                capture_output=True,
-                text=True,
                 timeout=30,
             )
 
@@ -249,14 +248,14 @@ class StartupModule:
             path = Path(item.path)
             if path.exists():
                 disabled_path = path.with_suffix(path.suffix + ".disabled")
+                guard_mutation(f"rename startup item {path} -> {disabled_path}", legacy=True)
                 path.rename(disabled_path)
                 return True
 
         elif item.type == "task":
             # Disable scheduled task
-            result = subprocess.run(
+            result = guarded_run(
                 ["schtasks", "/Change", "/TN", item.path, "/Disable"],
-                capture_output=True,
                 timeout=10,
             )
             return result.returncode == 0
@@ -281,13 +280,13 @@ class StartupModule:
             if not path.exists():
                 disabled_path = Path(str(path) + ".disabled")
                 if disabled_path.exists():
+                    guard_mutation(f"rename startup item {disabled_path} -> {path}", legacy=True)
                     disabled_path.rename(path)
                     return True
 
         elif item.type == "task":
-            result = subprocess.run(
+            result = guarded_run(
                 ["schtasks", "/Change", "/TN", item.path, "/Enable"],
-                capture_output=True,
                 timeout=10,
             )
             return result.returncode == 0
@@ -430,10 +429,8 @@ class StartupModule:
                     disabled += 1
                     continue
 
-                result = subprocess.run(
+                result = guarded_run(
                     ["schtasks", "/Change", "/TN", task, "/Disable"],
-                    capture_output=True,
-                    text=True,
                     timeout=10,
                 )
 
@@ -464,11 +461,12 @@ class StartupModule:
                 Write-Output $uptime.TotalSeconds
             }
             '''
-            result = subprocess.run(
-                ["powershell", "-Command", ps_command],
-                capture_output=True,
-                text=True,
+            result = guarded_run(
+                # Static script, Get-WinEvent only: observably read-only, so it stays available
+                # while the repository is contained. Nothing here is interpolated.
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_command],
                 timeout=10,
+                mutating=False,
             )
 
             if result.returncode == 0 and result.stdout.strip():

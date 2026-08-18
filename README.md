@@ -1,5 +1,20 @@
 # Windows Optimizer Absolute (WindowsOptimizerAbso)
 
+> ## ⚠ PRE-ALPHA — NOT SAFE TO RUN ON A MACHINE YOU CARE ABOUT
+>
+> This repository is under active remediation following an audit that found the safety claims to
+> be substantially ahead of the implementation: rollback was a no-op that printed success, mutating
+> operations captured no exact pre-state, and there was no transaction journal, no test suite and
+> no CI.
+>
+> **All mutating commands are currently disabled.** Read-only inspection works. The remediation
+> plan, the full defect register and the current status are in
+> [`docs/remediation/`](docs/remediation/) — start with
+> [`WORK_LEDGER.md`](docs/remediation/WORK_LEDGER.md).
+>
+> Do not run this against a production or personal Windows install. Use a disposable VM or
+> Windows Sandbox.
+
 A comprehensive Windows optimization toolkit designed for power users who want full control over their system's performance, privacy, and resource management.
 
 ## Features

@@ -4,10 +4,11 @@ Network optimization module
 
 from __future__ import annotations
 
-import subprocess
 from typing import Any, Optional
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 from ..core.engine import (
     OptimizationCategory,
@@ -211,8 +212,8 @@ class NetworkModule:
         # Flush DNS cache
         if not self.dry_run:
             try:
-                subprocess.run(["ipconfig", "/flushdns"], capture_output=True, timeout=10)
-                subprocess.run(["ipconfig", "/registerdns"], capture_output=True, timeout=10)
+                guarded_run(["ipconfig", "/flushdns"], timeout=10)
+                guarded_run(["ipconfig", "/registerdns"], timeout=10)
             except Exception as e:
                 logger.warning(f"Error flushing DNS: {e}")
 
@@ -258,7 +259,7 @@ class NetworkModule:
                     success += 1
                     continue
 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                result = guarded_run(cmd, timeout=10)
                 if result.returncode == 0:
                     success += 1
                 else:
@@ -309,10 +310,8 @@ class NetworkModule:
 
         # Get network statistics
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["netsh", "int", "tcp", "show", "global"],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
             if result.returncode == 0:
@@ -322,10 +321,8 @@ class NetworkModule:
 
         # Check DNS configuration
         try:
-            result = subprocess.run(
+            result = guarded_run(
                 ["ipconfig", "/displaydns"],
-                capture_output=True,
-                text=True,
                 timeout=10,
             )
             if result.returncode == 0:
@@ -362,7 +359,7 @@ class NetworkModule:
                     success += 1
                     continue
 
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                result = guarded_run(cmd, timeout=30)
                 if result.returncode == 0:
                     success += 1
                     if "restart" in result.stdout.lower() or "reboot" in result.stdout.lower():

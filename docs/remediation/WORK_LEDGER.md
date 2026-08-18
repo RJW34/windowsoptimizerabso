@@ -19,13 +19,13 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | BASE-001 | critical | 1 | open | fix | — | — | — | Source does not parse due to unterminated Windows drive strings. |
 | BASE-002 | critical | 1 | open | fix | — | — | — | `info` uses an empty `SystemInfo` and nonexistent method/schema. |
 | BASE-003 | critical | 0 | open | redesign | — | — | — | General optimization calls a nonexistent backup method. |
-| BASE-004 | critical | 0 | open | redesign | — | — | — | Rollback is a no-op that prints success. |
-| BASE-005 | high | 1 | open | fix | — | — | — | Session path suffix logic is incorrect. |
+| BASE-004 | critical | 0 | fixed | redesign (fails closed) | tests/test_containment.py | phase 0 commit | — | Rollback is a no-op that prints success. |
+| BASE-005 | high | 1 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Session path suffix logic is incorrect. |
 | BASE-006 | critical | 3 | open | redesign | — | — | — | Loaded results are disconnected from rollback state. |
-| BASE-007 | critical | 0 | open | redesign | — | — | — | Gaming, privacy, and cleanup shortcuts bypass backup and persistence. |
-| BASE-008 | critical | 0 | open | redesign | — | — | — | Visual presets bypass engine, confirmation, backup, and session. |
+| BASE-007 | critical | 0 | fixed | fail closed | tests/test_containment.py | phase 0 commit | — | Gaming, privacy, and cleanup shortcuts bypass backup and persistence. |
+| BASE-008 | critical | 0 | fixed | fail closed | tests/test_containment.py | phase 0 commit | — | Visual presets bypass engine, confirmation, backup, and session. |
 | BASE-009 | high | 1 | open | fix | — | — | — | Invalid optimization levels silently fall back to SAFE. |
-| BASE-010 | critical | 0 | open | fix | — | — | — | No Windows platform gate prevents mutation elsewhere. |
+| BASE-010 | critical | 0 | fixed | fix | tests/test_containment.py | phase 0 commit | — | No Windows platform gate prevents mutation elsewhere. |
 | BASE-011 | critical | 3 | open | redesign | — | — | — | `requires_admin` metadata is not enforced. |
 | BASE-012 | high | 2 | open | redesign | — | — | — | `analyze` lists task metadata instead of actual state/applicability. |
 | BASE-013 | high | 1 | open | fix | — | — | — | Failed results do not produce deterministic nonzero CLI exits. |
@@ -55,11 +55,11 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | BAK-004 | critical | 4 | open | implement | — | — | — | Scheduled-task restore is absent. |
 | BAK-005 | high | 3 | open | fix | — | — | — | Checksums are never verified and use MD5. |
 | BAK-006 | critical | 3 | open | fix | — | — | — | Index writes are non-atomic and corruption becomes empty history. |
-| BAK-007 | high | 4 | open | fix | — | — | — | Missing original path metadata is handled incorrectly. |
+| BAK-007 | high | 4 | fixed | fix | tests/test_legacy_guards.py | phase 0 commit | — | Missing original path metadata is handled incorrectly. |
 | BAK-008 | high | 4 | open | redesign | — | — | — | File rollback creates unmanaged `.rollback` files and can overwrite later edits. |
 | BAK-009 | high | 4 | open | redesign | — | — | — | Registry export/import is not exact rollback. |
 | BAK-010 | high | 3 | open | implement | — | — | — | Backup/journal storage lacks reparse, ownership, ACL, and disk checks. |
-| BAK-011 | high | 3 | open | fix | — | — | — | Restore-point description is interpolated into PowerShell. |
+| BAK-011 | high | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Restore-point description is interpolated into PowerShell. |
 | BAK-012 | medium | 7 | open | redesign | — | — | — | Age-only cleanup can delete the only recovery path. |
 | BAK-013 | high | 3 | open | implement | — | — | — | Recovery artifacts are not verified before mutation. |
 | REG-001 | critical | 4 | open | fix | — | — | — | Rollback captures target type instead of original type. |
@@ -144,8 +144,8 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | PKG-006 | high | 1 | open | fix | — | — | — | README advertises absent GUI/backup/restore/profiles/dirs/commands. |
 | PKG-007 | high | 7 | open | fix | — | — | — | MIT is declared but LICENSE absent; CONTRIBUTING referenced but absent. |
 | PKG-008 | high | 7 | open | implement | — | — | — | No tags/releases/branch protection/dependency alerts/code scanning. |
-| SEC-001 | critical | 3 | open | fix | — | — | — | Elevated commands rely on PATH. |
-| SEC-002 | critical | 3 | open | fix | — | — | — | PowerShell source interpolation permits injection. |
+| SEC-001 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Elevated commands rely on PATH. |
+| SEC-002 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | PowerShell source interpolation permits injection. |
 | SEC-003 | critical | 3 | open | implement | — | — | — | Generic mutation primitives could be exposed to an agent. |
 | SEC-004 | critical | 4 | open | implement | — | — | — | No canonical-path/reparse defense protects cleanup/backup. |
 | SEC-005 | high | 3 | open | implement | — | — | — | State can change between plan and apply. |

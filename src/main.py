@@ -15,6 +15,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from rich.table import Table
 from rich.prompt import Confirm
 
+from .safety import ContainmentStatus, containment_status
 from .core.engine import OptimizationEngine, OptimizationLevel, OptimizationCategory
 from .core.system_info import SystemInfo
 from .core.backup import BackupManager
@@ -31,6 +32,35 @@ app = typer.Typer(
     add_completion=False,
 )
 console = Console()
+
+
+#: Exit code used when a command is refused because the repository is contained (gate G0).
+EXIT_CONTAINED = 3
+
+
+def refuse_mutating_command(command: str, replacement: str) -> None:
+    """Refuse a legacy mutating command and explain what replaces it.
+
+    Every mutating command in this CLI predates the transactional core: it has no exact pre-state
+    capture, no durable journal, and no verified rollback. Until those exist, these commands are
+    unavailable rather than merely discouraged (gate G0). The underlying module code is still
+    guarded independently by ``safety.guard_mutation``; this is the outer, operator-facing layer.
+    """
+    status: ContainmentStatus = containment_status()
+    console.print(
+        Panel.fit(
+            f"[bold red]`winopt {command}` is disabled.[/]\n\n"
+            "This command changes the machine through the legacy code path, which has no exact\n"
+            "pre-state capture, no transaction journal, and no verified rollback. Running it\n"
+            "could leave the system in a state this tool cannot restore.\n\n"
+            f"[bold]Containment:[/] {status.summary}\n"
+            f"[bold]Instead:[/] {replacement}\n\n"
+            "Tracking: docs/remediation/WORK_LEDGER.md (BASE-003, BASE-004, BASE-007, BASE-008)",
+            title="Refused",
+            border_style="red",
+        )
+    )
+    raise typer.Exit(EXIT_CONTAINED)
 
 
 def setup_logging(verbose: bool = False):
@@ -131,6 +161,10 @@ def optimize(
 ):
     """Run optimizations"""
     setup_logging(verbose)
+    refuse_mutating_command(
+        "optimize",
+        "`winopt analyze` and `winopt info` remain available and are read-only.",
+    )
 
     # Parse optimization level
     level_map = {
@@ -244,6 +278,10 @@ def gaming(
 ):
     """Apply gaming optimizations (shortcut)"""
     setup_logging()
+    refuse_mutating_command(
+        "gaming",
+        "`winopt analyze --category gaming` lists what the legacy module would have changed.",
+    )
 
     console.print(Panel.fit("[bold cyan]Gaming Optimization[/]"))
 
@@ -279,6 +317,10 @@ def privacy(
 ):
     """Apply privacy optimizations (shortcut)"""
     setup_logging()
+    refuse_mutating_command(
+        "privacy",
+        "`winopt analyze --category privacy` lists what the legacy module would have changed.",
+    )
 
     console.print(Panel.fit("[bold cyan]Privacy Optimization[/]"))
 
@@ -311,6 +353,10 @@ def cleanup(
 ):
     """Run system cleanup (shortcut)"""
     setup_logging()
+    refuse_mutating_command(
+        "cleanup",
+        "`winopt analyze --category cleanup` lists what the legacy module would have removed.",
+    )
 
     console.print(Panel.fit("[bold cyan]System Cleanup[/]"))
 
@@ -371,12 +417,22 @@ def rollback(
         console.print(table)
         return
 
-    # Find and load session
-    session_path = backup_dir / session if not session.endswith(".json") else backup_dir / f"{session}.json"
-    if not session_path.exists():
-        session_path = backup_dir / f"session_{session}.json"
+    # Find and load session.
+    # BASE-005: the condition was inverted, so a name that already ended in ".json" had a second
+    # ".json" appended and could never be found. Candidates are now tried in order, most explicit
+    # first, and a name containing a path separator is rejected rather than escaping backup_dir.
+    if "/" in session or "\\" in session or session in {".", ".."}:
+        console.print(f"[red]Invalid session name: {session}[/]")
+        raise typer.Exit(1)
 
-    if not session_path.exists():
+    candidates = [
+        backup_dir / session,
+        backup_dir / f"{session}.json",
+        backup_dir / f"session_{session}.json",
+    ]
+    session_path = next((c for c in candidates if c.exists()), None)
+
+    if session_path is None:
         console.print(f"[red]Session not found: {session}[/]")
         raise typer.Exit(1)
 
@@ -385,9 +441,22 @@ def rollback(
 
     console.print(f"Loaded session with {len(results)} operations.")
 
-    if Confirm.ask("Rollback all changes from this session?"):
-        # Rollback logic would go here
-        console.print("[green]Rollback complete.[/]")
+    # BASE-004: this printed "Rollback complete." while doing nothing at all. Reporting a
+    # rollback that did not happen is the most dangerous defect in the baseline, because it
+    # invites the operator to trust an unreverted machine. It now fails loudly instead.
+    console.print(
+        Panel.fit(
+            "[bold red]Rollback is not implemented.[/]\n\n"
+            f"The session file was read and contains {len(results)} recorded operations, but this\n"
+            "build cannot restore them: the legacy session format records an operation name and a\n"
+            "boolean, not the exact prior state, and it is not connected to the engine's rollback\n"
+            "functions (BASE-004, BASE-006, CORE-010).\n\n"
+            "Nothing was changed. Do not treat this session as reverted.",
+            title="Refused",
+            border_style="red",
+        )
+    )
+    raise typer.Exit(EXIT_CONTAINED)
 
 
 @app.command()
@@ -401,13 +470,12 @@ def visual(
     module = VisualModule(dry_run=dry_run)
 
     if preset:
-        console.print(f"Applying [bold]{preset}[/] visual preset...")
-        result = module.apply_preset(preset)
-        if result.success:
-            console.print(f"[green]{result.message}[/]")
-        else:
-            console.print(f"[red]{result.message}[/]")
-        return
+        # BASE-008: presets bypassed the engine entirely -- no confirmation, no backup, no session
+        # record, no rollback. The read-only analysis below is unaffected.
+        refuse_mutating_command(
+            "visual --preset",
+            "`winopt visual` with no options shows the current visual-effects state.",
+        )
 
     # Show analysis
     console.print(Panel.fit("[bold cyan]Visual Effects Analysis[/]"))

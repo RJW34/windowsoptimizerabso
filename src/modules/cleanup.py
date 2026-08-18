@@ -6,13 +6,14 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterator, Optional
 
 from loguru import logger
+
+from ..safety import guard_mutation, guarded_run
 
 from ..core.engine import (
     OptimizationCategory,
@@ -317,6 +318,7 @@ class CleanupModule:
                 size = item.stat().st_size
 
                 if not self.dry_run:
+                    guard_mutation(f"delete file {item}", legacy=True)
                     item.unlink()
 
                 result.files_deleted += 1
@@ -387,9 +389,8 @@ class CleanupModule:
         try:
             if not self.dry_run:
                 # Run cleanmgr with specific switches
-                result = subprocess.run(
+                result = guarded_run(
                     ["cleanmgr", "/d", "C:", "/VERYLOWDISK"],
-                    capture_output=True,
                     timeout=300,
                 )
 
@@ -412,9 +413,8 @@ class CleanupModule:
         try:
             if not self.dry_run:
                 # Use PowerShell to clear recycle bin
-                subprocess.run(
+                guarded_run(
                     ["powershell", "-Command", "Clear-RecycleBin -Force -ErrorAction SilentlyContinue"],
-                    capture_output=True,
                     timeout=60,
                 )
 
@@ -502,7 +502,7 @@ class CleanupModule:
             # Set up cleanmgr to use sageset profile
             # This requires pre-configuration or admin to set options
             if not self.dry_run:
-                subprocess.run(
+                guarded_run(
                     ["cleanmgr", "/d", drive, "/LOWDISK"],
                     timeout=600,
                 )
