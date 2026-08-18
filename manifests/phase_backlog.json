@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "fed422ddc1b5808ad6c98908a96231a98b6ed625",
+  "phases": [
+    {
+      "phase": 0,
+      "name": "Containment and baseline",
+      "depends_on": [],
+      "defect_ids": [
+        "BASE-003",
+        "BASE-004",
+        "BASE-007",
+        "BASE-008",
+        "BASE-010"
+      ],
+      "deliverables": [
+        "mutation kill switch",
+        "baseline artifacts",
+        "work ledger",
+        "honest rollback failure"
+      ],
+      "exit_gate": "All phase 0 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 1,
+      "name": "Runnability, package, truthful CLI",
+      "depends_on": [
+        0
+      ],
+      "defect_ids": [
+        "BASE-001",
+        "BASE-002",
+        "BASE-005",
+        "BASE-009",
+        "BASE-013",
+        "STA-010",
+        "SYS-001",
+        "SYS-004",
+        "PKG-001",
+        "PKG-003",
+        "PKG-004",
+        "PKG-006"
+      ],
+      "deliverables": [
+        "compiling package",
+        "working read-only CLI",
+        "clean metadata",
+        "package smoke tests"
+      ],
+      "exit_gate": "All phase 1 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 2,
+      "name": "Typed domain, capability model, planner",
+      "depends_on": [
+        1
+      ],
+      "defect_ids": [
+        "BASE-012",
+        "BASE-014",
+        "CORE-005",
+        "CORE-006",
+        "CORE-012",
+        "CORE-014",
+        "CORE-017",
+        "SVC-009",
+        "SYS-002",
+        "SYS-003"
+      ],
+      "deliverables": [
+        "typed models",
+        "fake backends",
+        "capability planner",
+        "immutable plan digest"
+      ],
+      "exit_gate": "All phase 2 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 3,
+      "name": "Journal, executor, security core",
+      "depends_on": [
+        2
+      ],
+      "defect_ids": [
+        "BASE-006",
+        "BASE-011",
+        "BASE-015",
+        "BASE-016",
+        "CORE-001",
+        "CORE-002",
+        "CORE-003",
+        "CORE-004",
+        "CORE-007",
+        "CORE-008",
+        "CORE-009",
+        "CORE-010",
+        "CORE-011",
+        "CORE-013",
+        "CORE-015",
+        "CORE-016",
+        "BAK-001",
+        "BAK-005",
+        "BAK-006",
+        "BAK-010",
+        "BAK-011",
+        "BAK-013",
+        "SEC-001",
+        "SEC-002",
+        "SEC-003",
+        "SEC-005",
+        "TST-001",
+        "TST-003"
+      ],
+      "deliverables": [
+        "durable journal",
+        "constrained executor",
+        "drift detection",
+        "crash recovery",
+        "structured statuses"
+      ],
+      "exit_gate": "All phase 3 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 4,
+      "name": "Backend and module remediation",
+      "depends_on": [
+        3
+      ],
+      "defect_ids": [
+        "BAK-002",
+        "BAK-003",
+        "BAK-004",
+        "BAK-007",
+        "BAK-008",
+        "BAK-009",
+        "REG-001",
+        "REG-002",
+        "REG-003",
+        "REG-004",
+        "REG-005",
+        "REG-006",
+        "CLN-001",
+        "CLN-002",
+        "CLN-003",
+        "CLN-004",
+        "CLN-005",
+        "CLN-006",
+        "CLN-007",
+        "CLN-008",
+        "CLN-009",
+        "PRV-001",
+        "PRV-002",
+        "PRV-003",
+        "PRV-004",
+        "PRV-005",
+        "PRV-006",
+        "PRV-007",
+        "PRV-008",
+        "PRV-009",
+        "STA-001",
+        "STA-002",
+        "STA-003",
+        "STA-004",
+        "STA-005",
+        "STA-006",
+        "STA-007",
+        "STA-008",
+        "STA-009",
+        "SVC-001",
+        "SVC-002",
+        "SVC-003",
+        "SVC-004",
+        "SVC-005",
+        "SVC-006",
+        "SVC-007",
+        "SVC-008",
+        "NET-001",
+        "NET-002",
+        "NET-003",
+        "NET-004",
+        "NET-005",
+        "NET-006",
+        "NET-007",
+        "NET-008",
+        "NET-009",
+        "GAM-001",
+        "GAM-002",
+        "GAM-003",
+        "GAM-004",
+        "GAM-005",
+        "GAM-006",
+        "GAM-007",
+        "VIS-001",
+        "VIS-002",
+        "VIS-003",
+        "VIS-004",
+        "VIS-005",
+        "VIS-006",
+        "SEC-004"
+      ],
+      "deliverables": [
+        "operations ported one-by-one",
+        "unsupported operations removed",
+        "exact rollback"
+      ],
+      "exit_gate": "All phase 4 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 5,
+      "name": "Windows VM and reboot proof",
+      "depends_on": [
+        4
+      ],
+      "defect_ids": [
+        "TST-002",
+        "TST-004"
+      ],
+      "deliverables": [
+        "disposable Windows matrix",
+        "apply/reboot/rollback/reboot proof",
+        "state equality"
+      ],
+      "exit_gate": "All phase 5 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 6,
+      "name": "Per-game profiles and benchmarking",
+      "depends_on": [
+        5
+      ],
+      "defect_ids": [
+        "NET-010",
+        "GAM-008",
+        "GAM-009",
+        "GAM-010",
+        "GAM-011",
+        "PRD-001",
+        "PRD-002",
+        "PRD-003",
+        "PRD-004"
+      ],
+      "deliverables": [
+        "Rivals 2 profile",
+        "Slippi profile",
+        "session restoration",
+        "benchmark evidence"
+      ],
+      "exit_gate": "All phase 6 defects have tested dispositions and corresponding acceptance gates pass."
+    },
+    {
+      "phase": 7,
+      "name": "CI, governance, documentation, release",
+      "depends_on": [
+        6
+      ],
+      "defect_ids": [
+        "BAK-012",
+        "PKG-002",
+        "PKG-005",
+        "PKG-007",
+        "PKG-008",
+        "SEC-006",
+        "PRD-005"
+      ],
+      "deliverables": [
+        "CI",
+        "security automation",
+        "accurate docs",
+        "pre-release package",
+        "final report/audit"
+      ],
+      "exit_gate": "All phase 7 defects have tested dispositions and corresponding acceptance gates pass."
+    }
+  ]
+}

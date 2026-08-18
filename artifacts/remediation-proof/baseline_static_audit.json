@@ -1,0 +1,147 @@
+{
+  "repo": "/home/user/windowsoptimizerabso",
+  "python": "3.11.15 (main, Mar  3 2026, 09:26:23) [GCC 13.3.0]",
+  "files": [
+    {
+      "path": "src/__init__.py",
+      "sha256": "6af91a9f1356fc21b521e294bf023382c818c3ff40ed2179022a833daee74c79",
+      "bytes": 144
+    },
+    {
+      "path": "src/core/__init__.py",
+      "sha256": "7df654a069260cda71500fac91d69717ef3545aa613bcb6bf4a396294bc3a24f",
+      "bytes": 363
+    },
+    {
+      "path": "src/core/backup.py",
+      "sha256": "e80c269c8f44c926abf38b5afc817ff4ae56a07a7d964013fec70912f652a396",
+      "bytes": 17969
+    },
+    {
+      "path": "src/core/engine.py",
+      "sha256": "3c05206dcbb046b318d2191442792b799c0f64a9c7b80f9726f724e2ffd595c0",
+      "bytes": 11507
+    },
+    {
+      "path": "src/core/registry.py",
+      "sha256": "c85794cf3a0d1f970f73a27221c59e20a67c3d083866ae914cf97d27dcdcdff6",
+      "bytes": 15832
+    },
+    {
+      "path": "src/core/services.py",
+      "sha256": "a27a7ab889b922fc5f75549579a8cf3933da5f9af1ea737e3c9960f1c7daf7c5",
+      "bytes": 15696
+    },
+    {
+      "path": "src/core/system_info.py",
+      "sha256": "de367a2cfbfad2423f10f3f243d08282b832244c721c98446d43a12ca1135635",
+      "bytes": 13004
+    },
+    {
+      "path": "src/main.py",
+      "sha256": "7d36c640406c3b0f0e4b29fea1df1dfee7a8e48fd255a73dc0e9e48583be9ee2",
+      "bytes": 15269
+    },
+    {
+      "path": "src/modules/__init__.py",
+      "sha256": "6aa54b68c7b257294f4a93c9ae280b9db3c33c451aa10285408dcde92bc3bbed",
+      "bytes": 397
+    },
+    {
+      "path": "src/modules/cleanup.py",
+      "sha256": "ebe06f118a4951563a4dd13c1e6ad6fff4ab1c375d06a969cd4f655da067c2ab",
+      "bytes": 19088
+    },
+    {
+      "path": "src/modules/gaming.py",
+      "sha256": "53478558365be66b0d6c67d77ffca69b25e766d4da7f6bb7b92f4f77ef49b83c",
+      "bytes": 17791
+    },
+    {
+      "path": "src/modules/network.py",
+      "sha256": "5475546b4d646dc6a112659f25e0de7be819d3bf732a885d48e5aa9047e1506e",
+      "bytes": 14905
+    },
+    {
+      "path": "src/modules/privacy.py",
+      "sha256": "b4fbed25b9237c6b8b17657fa0b9eb5b834348b6eb869b510e1eb847bb00acf5",
+      "bytes": 18114
+    },
+    {
+      "path": "src/modules/startup.py",
+      "sha256": "2955e141428e7c7a4d5bfb1113d7b27d120f3a4aa121b7a6b683261d572fc62e",
+      "bytes": 17351
+    },
+    {
+      "path": "src/modules/visual.py",
+      "sha256": "45c22f5fe0fc447ce5ff92fa4bf56b6ebc1ac0cc0dcf9ad6a96748742afb063e",
+      "bytes": 17714
+    }
+  ],
+  "parse_failures": [],
+  "compile_failures": [],
+  "pattern_hits": [
+    {
+      "pattern": "powershell_command",
+      "path": "src/core/backup.py"
+    },
+    {
+      "pattern": "service_disable_command",
+      "path": "src/core/services.py"
+    },
+    {
+      "pattern": "fake_rollback_success",
+      "path": "src/main.py"
+    },
+    {
+      "pattern": "missing_backup_call",
+      "path": "src/main.py"
+    },
+    {
+      "pattern": "direct_module_preset",
+      "path": "src/main.py"
+    },
+    {
+      "pattern": "powershell_command",
+      "path": "src/modules/cleanup.py"
+    },
+    {
+      "pattern": "service_disable_command",
+      "path": "src/modules/gaming.py"
+    },
+    {
+      "pattern": "network_netsh_command",
+      "path": "src/modules/network.py"
+    },
+    {
+      "pattern": "powershell_command",
+      "path": "src/modules/startup.py"
+    },
+    {
+      "pattern": "placeholder_repo_url",
+      "path": "README.md"
+    },
+    {
+      "pattern": "placeholder_repo_url",
+      "path": "pyproject.toml"
+    },
+    {
+      "pattern": "placeholder_author",
+      "path": "pyproject.toml"
+    }
+  ],
+  "missing_expected_paths": [
+    "tests",
+    ".github/workflows",
+    "LICENSE",
+    "SECURITY.md",
+    "CHANGELOG.md"
+  ],
+  "summary": {
+    "python_files": 15,
+    "parse_failures": 0,
+    "compile_failures": 0,
+    "pattern_hits": 12,
+    "missing_expected_paths": 5
+  }
+}
