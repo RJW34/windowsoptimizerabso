@@ -10,14 +10,11 @@ prove the environment gate, because neither opt-in variable is set in a test pro
 from __future__ import annotations
 
 import pathlib
-import sys
 
 import pytest
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-
-from src import safety  # noqa: E402
-from src.safety import (  # noqa: E402
+from windowsoptimizerabso import safety
+from windowsoptimizerabso.safety import (
     ALLOW_LEGACY_ENV,
     ALLOW_MUTATION_ENV,
     MutationBlocked,
@@ -188,7 +185,7 @@ def test_extra_env_names_are_validated():
 # ---------------------------------------------------------------------------
 
 def test_registry_writes_are_guarded():
-    from src.core.registry import RegistryManager
+    from windowsoptimizerabso.legacy.core.registry import RegistryManager
 
     manager = RegistryManager()
     with pytest.raises(MutationBlocked):
@@ -201,7 +198,7 @@ def test_registry_writes_are_guarded():
 
 def test_registry_export_stays_available_but_import_does_not():
     """Reading state must keep working while contained; writing it back must not."""
-    from src.core.registry import RegistryManager
+    from windowsoptimizerabso.legacy.core.registry import RegistryManager
 
     manager = RegistryManager()
     with pytest.raises(MutationBlocked):
@@ -210,7 +207,7 @@ def test_registry_export_stays_available_but_import_does_not():
 
 
 def test_service_mutations_are_guarded():
-    from src.core.services import ServiceManager, ServiceStartType
+    from windowsoptimizerabso.legacy.core.services import ServiceManager, ServiceStartType
 
     manager = ServiceManager()
     with pytest.raises(MutationBlocked):
@@ -223,7 +220,7 @@ def test_service_mutations_are_guarded():
 
 def test_restore_point_description_cannot_inject_powershell(monkeypatch, tmp_path):
     """SEC-002/BAK-011: the description must never reach a command interpreter."""
-    from src.core.backup import BackupManager
+    from windowsoptimizerabso.legacy.core.backup import BackupManager
 
     captured: dict = {}
 
@@ -232,7 +229,7 @@ def test_restore_point_description_cannot_inject_powershell(monkeypatch, tmp_pat
         captured["extra_env"] = kwargs.get("extra_env") or {}
         return safety.RunResult(argv=tuple(argv), returncode=0, stdout="", stderr="", timed_out=False)
 
-    monkeypatch.setattr("src.core.backup.guarded_run", fake_run)
+    monkeypatch.setattr("windowsoptimizerabso.legacy.core.backup.guarded_run", fake_run)
 
     manager = BackupManager(backup_dir=tmp_path / "backups")
     hostile = 'x"; Remove-Item C:\\ -Recurse -Force; "'
@@ -245,7 +242,7 @@ def test_restore_point_description_cannot_inject_powershell(monkeypatch, tmp_pat
 
 
 def test_restore_point_description_rejects_newlines(tmp_path):
-    from src.core.backup import BackupManager
+    from windowsoptimizerabso.legacy.core.backup import BackupManager
 
     manager = BackupManager(backup_dir=tmp_path / "backups")
     assert manager.create_system_restore_point("line1\nline2") is False
@@ -257,7 +254,7 @@ def test_file_restore_rejects_backup_with_no_recorded_origin(tmp_path):
     """BAK-007: Path("") is truthy, so the old guard never fired."""
     from datetime import datetime
 
-    from src.core.backup import BackupEntry, BackupManager, BackupType
+    from windowsoptimizerabso.legacy.core.backup import BackupEntry, BackupManager, BackupType
 
     manager = BackupManager(backup_dir=tmp_path / "backups")
     entry = BackupEntry(
@@ -276,50 +273,89 @@ def test_file_restore_rejects_backup_with_no_recorded_origin(tmp_path):
 # CLI level (BASE-004, BASE-007, BASE-008)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize(
-    "argv",
-    [
-        ["optimize", "-y"],
-        ["gaming", "-y"],
-        ["privacy", "-y"],
-        ["cleanup", "-y"],
-        ["visual", "--preset", "performance"],
-    ],
-)
-def test_mutating_cli_commands_exit_with_the_contained_code(argv):
+@pytest.mark.parametrize("command", ["optimize", "gaming", "privacy", "cleanup", "visual", "rollback"])
+def test_withdrawn_commands_refuse_and_change_nothing(command):
+    """Every command that used to mutate now exits CONTAINED and says so."""
     from typer.testing import CliRunner
 
-    from src.main import EXIT_CONTAINED, app
+    from windowsoptimizerabso.cli.app import app
+    from windowsoptimizerabso.cli.exit_codes import ExitCode
 
-    result = CliRunner().invoke(app, argv)
-    assert result.exit_code == EXIT_CONTAINED, result.output
+    result = CliRunner().invoke(app, [command])
+    assert result.exit_code == int(ExitCode.CONTAINED), result.output
+    assert "withdrawn" in result.output.lower()
+    assert "Nothing was changed" in result.output
 
 
-def test_rollback_no_longer_claims_success(tmp_path, monkeypatch):
-    """BASE-004: the baseline printed 'Rollback complete.' without rolling anything back."""
-    import json
+def test_rollback_never_reports_a_completed_rollback():
+    """BASE-004: the baseline printed "Rollback complete." having restored nothing.
 
+    The property under test is that no exit-zero success is reported for a rollback that did not
+    happen. The refusal text is allowed to *describe* the old defect; what it may not do is claim
+    the current invocation restored anything.
+    """
     from typer.testing import CliRunner
 
-    from src.main import EXIT_CONTAINED, app
+    from windowsoptimizerabso.cli.app import app
+    from windowsoptimizerabso.cli.exit_codes import ExitCode
 
-    backup_dir = tmp_path / ".winopt" / "backups"
-    backup_dir.mkdir(parents=True)
-    session = backup_dir / "session_20260101_000000.json"
-    session.write_text(json.dumps({
-        "timestamp": "2026-01-01T00:00:00",
-        "level": "SAFE",
-        "dry_run": False,
-        "results": [{
-            "success": True, "module": "privacy", "operation": "disable_telemetry",
-            "message": "ok", "details": {}, "rollback_data": {"x": 1},
-            "timestamp": "2026-01-01T00:00:00",
-        }],
-    }))
-    monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setattr(pathlib.Path, "home", classmethod(lambda cls: tmp_path))
+    result = CliRunner().invoke(app, ["rollback"])
+    assert result.exit_code == int(ExitCode.CONTAINED)
+    assert "rollback complete" not in result.output.lower()
+    assert "withdrawn" in result.output.lower()
+    assert "Nothing was changed" in result.output
 
-    result = CliRunner().invoke(app, ["rollback", session.name])
-    assert result.exit_code == EXIT_CONTAINED, result.output
-    assert "Rollback complete" not in result.output
-    assert "not implemented" in result.output.lower()
+
+def test_no_supported_module_imports_the_legacy_tree():
+    """Structural check: nothing on the supported path imports the quarantined prototype."""
+    offenders = [
+        f"{path}: {name}"
+        for path, name in _package_imports()
+        if "legacy" in name and "legacy" not in path.parts
+    ]
+    assert offenders == [], f"supported code imports quarantined legacy code: {offenders}"
+
+
+def test_subprocess_is_reachable_only_through_the_safety_layer():
+    """No module may re-implement process execution and skip the guard (SEC-001, SEC-003)."""
+    offenders = [
+        f"{'/'.join(path.parts)}: {name}"
+        for path, name in _package_imports()
+        if name.split(".")[0] == "subprocess"
+        and "legacy" not in path.parts
+        and path.name != "safety.py"
+    ]
+    assert offenders == [], f"subprocess imported outside the safety layer: {offenders}"
+
+
+def test_winreg_is_imported_only_where_registry_access_belongs():
+    """Reading the registry is fine; it may only happen in inspection and the Windows backends.
+
+    Registry *writes* are a separate control: they go through ``safety.guard_mutation`` regardless
+    of which module holds the handle.
+    """
+    allowed_roots = {("inspection",), ("backends", "windows")}
+    offenders = []
+    for path, name in _package_imports():
+        if name.split(".")[0] != "winreg" or "legacy" in path.parts:
+            continue
+        if not any(path.parts[: len(root)] == root for root in allowed_roots):
+            offenders.append("/".join(path.parts))
+    assert offenders == [], f"winreg imported outside inspection/backends: {offenders}"
+
+
+def _package_imports():
+    """Yield ``(relative_path, imported_module_name)`` for every import in the package."""
+    import ast
+    import importlib
+
+    package = pathlib.Path(importlib.import_module("windowsoptimizerabso").__file__).parent
+    for source_file in sorted(package.rglob("*.py")):
+        relative = source_file.relative_to(package)
+        tree = ast.parse(source_file.read_text())
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    yield relative, alias.name
+            elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
+                yield relative, node.module

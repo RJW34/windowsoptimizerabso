@@ -11,7 +11,7 @@ from typing import Any, Optional, Union
 
 from loguru import logger
 
-from ..safety import guard_mutation, guarded_run
+from ...safety import guard_mutation, guarded_run
 
 # winreg is only available on Windows
 try:

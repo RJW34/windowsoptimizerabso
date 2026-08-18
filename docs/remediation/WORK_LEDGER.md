@@ -16,8 +16,8 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 
 | ID | Severity | Phase | Status | Disposition | Tests | Proof | Commit | Summary |
 |---|---|---:|---|---|---|---|---|---|
-| BASE-001 | critical | 1 | open | fix | — | — | — | Source does not parse due to unterminated Windows drive strings. |
-| BASE-002 | critical | 1 | open | fix | — | — | — | `info` uses an empty `SystemInfo` and nonexistent method/schema. |
+| BASE-001 | critical | 1 | rejected | does not reproduce | tests/test_packaging.py | DECISION_LOG D-001 | — | Source does not parse due to unterminated Windows drive strings. |
+| BASE-002 | critical | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | `info` uses an empty `SystemInfo` and nonexistent method/schema. |
 | BASE-003 | critical | 0 | open | redesign | — | — | — | General optimization calls a nonexistent backup method. |
 | BASE-004 | critical | 0 | fixed | redesign (fails closed) | tests/test_containment.py | phase 0 commit | — | Rollback is a no-op that prints success. |
 | BASE-005 | high | 1 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Session path suffix logic is incorrect. |
@@ -28,7 +28,7 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | BASE-010 | critical | 0 | fixed | fix | tests/test_containment.py | phase 0 commit | — | No Windows platform gate prevents mutation elsewhere. |
 | BASE-011 | critical | 3 | open | redesign | — | — | — | `requires_admin` metadata is not enforced. |
 | BASE-012 | high | 2 | open | redesign | — | — | — | `analyze` lists task metadata instead of actual state/applicability. |
-| BASE-013 | high | 1 | open | fix | — | — | — | Failed results do not produce deterministic nonzero CLI exits. |
+| BASE-013 | high | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | Failed results do not produce deterministic nonzero CLI exits. |
 | BASE-014 | medium | 2 | open | redesign | — | — | — | Services, registry, and power are advertised but not integrated. |
 | BASE-015 | medium | 3 | open | fix | — | — | — | Repeated engine execution accumulates old results. |
 | BASE-016 | high | 3 | open | redesign | — | — | — | Reboot requirement is dynamically attached and not serialized. |
@@ -95,7 +95,7 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | STA-007 | high | 4 | open | fix | — | — | — | Rollback ignores per-item failures and returns true. |
 | STA-008 | high | 4 | open | redesign | — | — | — | Boot optimization comments/settings are inaccurate or obsolete. |
 | STA-009 | medium | 4 | open | fix | — | — | — | `get_boot_time` returns uptime, not boot duration. |
-| STA-010 | medium | 1 | open | fix | — | — | — | Shell-extension cleanup is advertised but absent. |
+| STA-010 | medium | 1 | removed | remove (claim deleted) | tests/test_cli.py | phase 1 commit | — | Shell-extension cleanup is advertised but absent. |
 | SVC-001 | critical | 4 | open | fix | — | — | — | Critical-service protection is case-sensitive while Windows names are case-insensitive. |
 | SVC-002 | critical | 4 | open | fix | — | — | — | Dependencies/dependents are queried but not enforced. |
 | SVC-003 | critical | 4 | open | fix | — | — | — | Stop failure does not prevent disable. |
@@ -132,16 +132,16 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | VIS-004 | high | 4 | open | implement | — | — | — | Visual changes ignore accessibility and preference impact. |
 | VIS-005 | high | 4 | open | fix | — | — | — | HKCU visual operations have no explicit target user. |
 | VIS-006 | medium | 4 | open | implement | — | — | — | Visual operations do not model Explorer/logoff activation requirements. |
-| SYS-001 | high | 1 | open | fix | — | — | — | WMI is imported but unused and hardware data does not drive applicability. |
+| SYS-001 | high | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | WMI is imported but unused and hardware data does not drive applicability. |
 | SYS-002 | high | 2 | open | implement | — | — | — | GPU, driver, display, battery, virtualization, domain/VPN, restore-point, and interactive-user data are missing. |
-| SYS-003 | medium | 2 | open | fix | — | — | — | Reports can expose machine identifiers without redaction contract. |
-| SYS-004 | medium | 1 | open | fix | — | — | — | Timestamps are naive and ambiguous across recovery. |
+| SYS-003 | medium | 2 | fixed | fix | tests/test_cli.py | phase 1 commit | — | Reports can expose machine identifiers without redaction contract. |
+| SYS-004 | medium | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | Timestamps are naive and ambiguous across recovery. |
 | PKG-001 | critical | 1 | open | implement | — | — | — | No tests are committed. |
 | PKG-002 | critical | 7 | open | implement | — | — | — | No GitHub Actions or commit checks exist. |
-| PKG-003 | high | 1 | open | fix | — | — | — | pyproject and requirements disagree; runtime/dev/unused packages mix. |
-| PKG-004 | high | 1 | open | fix | — | — | — | Package is named `src` and metadata has placeholders. |
-| PKG-005 | high | 7 | open | fix | — | — | — | Version 1.0.0 overstates maturity. |
-| PKG-006 | high | 1 | open | fix | — | — | — | README advertises absent GUI/backup/restore/profiles/dirs/commands. |
+| PKG-003 | high | 1 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | pyproject and requirements disagree; runtime/dev/unused packages mix. |
+| PKG-004 | high | 1 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | Package is named `src` and metadata has placeholders. |
+| PKG-005 | high | 7 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | Version 1.0.0 overstates maturity. |
+| PKG-006 | high | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | README advertises absent GUI/backup/restore/profiles/dirs/commands. |
 | PKG-007 | high | 7 | open | fix | — | — | — | MIT is declared but LICENSE absent; CONTRIBUTING referenced but absent. |
 | PKG-008 | high | 7 | open | implement | — | — | — | No tags/releases/branch protection/dependency alerts/code scanning. |
 | SEC-001 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Elevated commands rely on PATH. |
@@ -158,7 +158,7 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | PRD-002 | high | 6 | open | implement | — | — | — | Profiles lack schema/version/provenance/conflict/evidence. |
 | PRD-003 | high | 6 | open | implement | — | — | — | No automatic restore after game exit/crash. |
 | PRD-004 | high | 6 | open | implement | — | — | — | No user-readable state diff/tradeoff/evidence display. |
-| PRD-005 | medium | 7 | open | remove | — | — | — | GUI dependencies/commands are advertised without implementation. |
+| PRD-005 | medium | 7 | removed | remove | tests/test_packaging.py | phase 1 commit | — | GUI dependencies/commands are advertised without implementation. |
 
 ## Discovered defects
 

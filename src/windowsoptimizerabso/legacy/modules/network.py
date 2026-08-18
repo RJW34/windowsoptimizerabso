@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 from loguru import logger
 
-from ..safety import guard_mutation, guarded_run
+from ...safety import guard_mutation, guarded_run
 
 from ..core.engine import (
     OptimizationCategory,

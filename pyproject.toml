@@ -4,20 +4,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "windowsoptimizerabso"
-version = "1.0.0"
-description = "Comprehensive Windows optimization toolkit"
+# PKG-005: pre-release. 1.0.0 was claimed for a tree with no tests, no CI, and a rollback command
+# that printed success without doing anything. The version moves when the blocking gates in
+# manifests/acceptance_gate_matrix.csv pass, not before.
+version = "0.0.1a1"
+description = "Per-game Windows state planner with exact-state capture and verified rollback (pre-alpha)"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
 authors = [
-    {name = "Your Name", email = "your@email.com"}
+    {name = "RJW34"},
 ]
-keywords = ["windows", "optimization", "performance", "privacy", "tweaks"]
+keywords = ["windows", "optimization", "gaming", "registry", "rollback"]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    # PKG-004: the baseline claimed "4 - Beta" while unable to roll back a single change.
+    "Development Status :: 2 - Pre-Alpha",
+    "Environment :: Console",
     "Environment :: Win32 (MS Windows)",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Operating System :: Microsoft :: Windows :: Windows 11",
     "Programming Language :: Python :: 3",
@@ -25,58 +30,63 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: System :: Systems Administration",
-    "Topic :: Utilities",
 ]
 
+# PKG-003: runtime dependencies only, and only what is actually imported. Removed from the
+# baseline: customtkinter, Pillow and ttkthemes (no GUI exists -- PRD-005), pywin32 and wmi
+# (never imported; the Windows work uses stdlib winreg and allowlisted system binaries),
+# questionary, toml and packaging (unused), and the pytest/black/ruff/mypy development tools that
+# were listed as runtime requirements.
 dependencies = [
-    "pywin32>=306",
     "psutil>=5.9.0",
-    "customtkinter>=5.2.0",
     "typer>=0.9.0",
     "rich>=13.0.0",
     "loguru>=0.7.0",
-    "pyyaml>=6.0",
-    "Pillow>=10.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
-    "black>=23.0.0",
     "ruff>=0.1.0",
     "mypy>=1.5.0",
+    "build>=1.0.0",
 ]
 
 [project.scripts]
-winopt = "src.main:main"
+winopt = "windowsoptimizerabso.cli.app:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/windowsoptimizerabso"
-Repository = "https://github.com/yourusername/windowsoptimizerabso"
-Issues = "https://github.com/yourusername/windowsoptimizerabso/issues"
+Homepage = "https://github.com/RJW34/windowsoptimizerabso"
+Repository = "https://github.com/RJW34/windowsoptimizerabso"
+Issues = "https://github.com/RJW34/windowsoptimizerabso/issues"
 
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["src*"]
-
-[tool.black]
-line-length = 100
-target-version = ["py310", "py311", "py312"]
+where = ["src"]
+include = ["windowsoptimizerabso*"]
 
 [tool.ruff]
-line-length = 100
+line-length = 110
 target-version = "py310"
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Quarantined baseline code. It is linted for syntax by the compile gate, but it is not held to
+# the style rules of the new tree: reformatting it would obscure the diff when each operation is
+# ported and deleted.
+"src/windowsoptimizerabso/legacy/*" = ["ALL"]
 
 [tool.mypy]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_ignores = true
 disallow_untyped_defs = true
+exclude = "src/windowsoptimizerabso/legacy/"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
-addopts = "-v --cov=src --cov-report=term-missing"
+addopts = "-v"
