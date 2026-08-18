@@ -24,10 +24,10 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | BASE-006 | critical | 3 | open | redesign | — | — | — | Loaded results are disconnected from rollback state. |
 | BASE-007 | critical | 0 | fixed | fail closed | tests/test_containment.py | phase 0 commit | — | Gaming, privacy, and cleanup shortcuts bypass backup and persistence. |
 | BASE-008 | critical | 0 | fixed | fail closed | tests/test_containment.py | phase 0 commit | — | Visual presets bypass engine, confirmation, backup, and session. |
-| BASE-009 | high | 1 | open | fix | — | — | — | Invalid optimization levels silently fall back to SAFE. |
+| BASE-009 | high | 1 | fixed | fix | tests/test_planner.py | phase 2 commit | — | Invalid optimization levels silently fall back to SAFE. |
 | BASE-010 | critical | 0 | fixed | fix | tests/test_containment.py | phase 0 commit | — | No Windows platform gate prevents mutation elsewhere. |
 | BASE-011 | critical | 3 | open | redesign | — | — | — | `requires_admin` metadata is not enforced. |
-| BASE-012 | high | 2 | open | redesign | — | — | — | `analyze` lists task metadata instead of actual state/applicability. |
+| BASE-012 | high | 2 | fixed | redesign | tests/test_planner.py | phase 2 commit | — | `analyze` lists task metadata instead of actual state/applicability. |
 | BASE-013 | high | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | Failed results do not produce deterministic nonzero CLI exits. |
 | BASE-014 | medium | 2 | open | redesign | — | — | — | Services, registry, and power are advertised but not integrated. |
 | BASE-015 | medium | 3 | open | fix | — | — | — | Repeated engine execution accumulates old results. |
@@ -36,19 +36,19 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | CORE-002 | critical | 3 | open | implement | — | — | — | No durable atomic transaction journal exists. |
 | CORE-003 | critical | 3 | open | implement | — | — | — | Operations trust return values without postcondition verification. |
 | CORE-004 | critical | 3 | open | redesign | — | — | — | Execution continues after failure with no coordinated rollback. |
-| CORE-005 | high | 2 | open | implement | — | — | — | No OS-build, hardware, feature, or prerequisite model exists. |
-| CORE-006 | high | 2 | open | implement | — | — | — | No dependency or conflict ordering exists. |
-| CORE-007 | critical | 3 | open | fix | — | — | — | Raw binary registry values cannot be JSON serialized. |
+| CORE-005 | high | 2 | fixed | implement | tests/test_planner.py | phase 2 commit | — | No OS-build, hardware, feature, or prerequisite model exists. |
+| CORE-006 | high | 2 | fixed | implement | tests/test_planner.py | phase 2 commit | — | No dependency or conflict ordering exists. |
+| CORE-007 | critical | 3 | fixed | fix | tests/test_domain.py | phase 2 commit | — | Raw binary registry values cannot be JSON serialized. |
 | CORE-008 | high | 3 | open | implement | — | — | — | Legacy sessions lack schema/version validation. |
 | CORE-009 | high | 3 | open | implement | — | — | — | Session and recovery data have no integrity validation. |
 | CORE-010 | critical | 3 | open | redesign | — | — | — | Rollback is identified only by operation name and boolean result. |
 | CORE-011 | critical | 3 | open | implement | — | — | — | No cancellation, crash, reboot, or incomplete-transaction recovery exists. |
-| CORE-012 | high | 2 | open | implement | — | — | — | No immutable plan digest or state-drift check exists. |
+| CORE-012 | high | 2 | fixed | implement | tests/test_planner.py | phase 2 commit | — | No immutable plan digest or state-drift check exists. |
 | CORE-013 | high | 3 | open | implement | — | — | — | Concurrent processes can race. |
 | CORE-014 | high | 2 | open | implement | — | — | — | User-scoped operations do not identify intended interactive user. |
 | CORE-015 | medium | 3 | open | fix | — | — | — | Callback failures are swallowed and callbacks are untyped. |
-| CORE-016 | high | 3 | open | implement | — | — | — | Boolean success cannot represent partial/skipped/unsupported/reboot states. |
-| CORE-017 | medium | 2 | open | redesign | — | — | — | Risk ordering relies on enum declaration and ambiguous CUSTOM semantics. |
+| CORE-016 | high | 3 | fixed | implement | tests/test_domain.py | phase 2 commit | — | Boolean success cannot represent partial/skipped/unsupported/reboot states. |
+| CORE-017 | medium | 2 | fixed | redesign | tests/test_domain.py | phase 2 commit | — | Risk ordering relies on enum declaration and ambiguous CUSTOM semantics. |
 | BAK-001 | critical | 3 | open | redesign | — | — | — | Backup and engine session formats are disconnected. |
 | BAK-002 | high | 4 | open | fix | — | — | — | Service backup records success without checking command results. |
 | BAK-003 | critical | 4 | open | implement | — | — | — | Service configuration restore is absent. |
@@ -62,11 +62,11 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | BAK-011 | high | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Restore-point description is interpolated into PowerShell. |
 | BAK-012 | medium | 7 | open | redesign | — | — | — | Age-only cleanup can delete the only recovery path. |
 | BAK-013 | high | 3 | open | implement | — | — | — | Recovery artifacts are not verified before mutation. |
-| REG-001 | critical | 4 | open | fix | — | — | — | Rollback captures target type instead of original type. |
-| REG-002 | high | 4 | open | implement | — | — | — | Registry view is implicit. |
+| REG-001 | critical | 4 | fixed | fix | tests/test_domain.py | phase 2 commit | — | Rollback captures target type instead of original type. |
+| REG-002 | high | 4 | fixed | implement | tests/test_domain.py | phase 2 commit | — | Registry view is implicit. |
 | REG-003 | high | 4 | open | implement | — | — | — | Writes/deletes are not read-back verified. |
-| REG-004 | critical | 4 | open | redesign | — | — | — | Generic broad registry mutation can be exposed. |
-| REG-005 | high | 4 | open | fix | — | — | — | Unknown registry types default to string. |
+| REG-004 | critical | 4 | fixed | redesign | tests/test_planner.py | phase 2 commit | — | Generic broad registry mutation can be exposed. |
+| REG-005 | high | 4 | fixed | fix | tests/test_backends_fake.py | phase 2 commit | — | Unknown registry types default to string. |
 | REG-006 | critical | 4 | open | fix | — | — | — | Visual code mutates `UserPreferencesMask` outside returned rollback. |
 | CLN-001 | critical | 4 | open | fix | — | — | — | Cleanup reports success despite deletion/permission errors. |
 | CLN-002 | critical | 4 | open | redesign | — | — | — | Irreversible cleanup is labeled SAFE and bundled broadly. |
@@ -96,7 +96,7 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | STA-008 | high | 4 | open | redesign | — | — | — | Boot optimization comments/settings are inaccurate or obsolete. |
 | STA-009 | medium | 4 | open | fix | — | — | — | `get_boot_time` returns uptime, not boot duration. |
 | STA-010 | medium | 1 | removed | remove (claim deleted) | tests/test_cli.py | phase 1 commit | — | Shell-extension cleanup is advertised but absent. |
-| SVC-001 | critical | 4 | open | fix | — | — | — | Critical-service protection is case-sensitive while Windows names are case-insensitive. |
+| SVC-001 | critical | 4 | fixed | fix | tests/test_backends_fake.py | phase 2 commit | — | Critical-service protection is case-sensitive while Windows names are case-insensitive. |
 | SVC-002 | critical | 4 | open | fix | — | — | — | Dependencies/dependents are queried but not enforced. |
 | SVC-003 | critical | 4 | open | fix | — | — | — | Stop failure does not prevent disable. |
 | SVC-004 | critical | 4 | open | fix | — | — | — | Gaming profile disables Xbox services. |
@@ -146,11 +146,11 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | PKG-008 | high | 7 | open | implement | — | — | — | No tags/releases/branch protection/dependency alerts/code scanning. |
 | SEC-001 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | Elevated commands rely on PATH. |
 | SEC-002 | critical | 3 | fixed | fix | tests/test_containment.py | phase 0 commit | — | PowerShell source interpolation permits injection. |
-| SEC-003 | critical | 3 | open | implement | — | — | — | Generic mutation primitives could be exposed to an agent. |
+| SEC-003 | critical | 3 | fixed | implement | tests/test_planner.py | phase 2 commit | — | Generic mutation primitives could be exposed to an agent. |
 | SEC-004 | critical | 4 | open | implement | — | — | — | No canonical-path/reparse defense protects cleanup/backup. |
-| SEC-005 | high | 3 | open | implement | — | — | — | State can change between plan and apply. |
+| SEC-005 | high | 3 | fixed | implement | tests/test_planner.py | phase 2 commit | — | State can change between plan and apply. |
 | SEC-006 | high | 7 | open | implement | — | — | — | No dependency scanning, SBOM, or artifact verification. |
-| TST-001 | critical | 3 | open | implement | — | — | — | No fake backend or fault-injection framework exists. |
+| TST-001 | critical | 3 | fixed | implement | tests/test_backends_fake.py | phase 2 commit | — | No fake backend or fault-injection framework exists. |
 | TST-002 | critical | 5 | open | implement | — | — | — | No disposable Windows VM apply/reboot/rollback proof exists. |
 | TST-003 | high | 3 | open | implement | — | — | — | No concurrency/crash/corruption/disk-full/locale/Unicode/reparse tests exist. |
 | TST-004 | critical | 5 | open | implement | — | — | — | No exact state-equality assertion exists after rollback. |

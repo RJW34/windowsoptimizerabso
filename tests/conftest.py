@@ -12,3 +12,9 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[1] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
+
+# Test-support modules (conftest_operations) live beside the tests, so make the directory
+# importable as well as the package under test.
+TESTS = Path(__file__).resolve().parent
+if str(TESTS) not in sys.path:
+    sys.path.insert(0, str(TESTS))
