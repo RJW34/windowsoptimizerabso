@@ -14,6 +14,7 @@ stubbed: a command that exists but does nothing is how the baseline ended up pri
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Optional
 
 import typer
@@ -222,6 +223,80 @@ def doctor(
     if not system_info.python_supported():
         raise typer.Exit(int(ExitCode.UNSUPPORTED))
     raise typer.Exit(int(ExitCode.SUCCESS))
+
+
+def journal_path() -> Path:
+    """Where the transaction journal lives. Read-only from this CLI for now."""
+    return Path.home() / ".winopt" / "journal.sqlite3"
+
+
+@app.command()
+def history(
+    limit: int = typer.Option(20, "--limit", "-n", help="How many transactions to show."),
+    as_json: bool = typer.Option(False, "--json", help="Emit stable JSON for automation."),
+) -> None:
+    """List recorded transactions and flag any that were interrupted.
+
+    Read-only. Exits RECOVERY_REQUIRED when an incomplete transaction is found, so a script can
+    detect that a machine is mid-change without having to parse the output.
+    """
+    from ..journal.sqlite_journal import JournalError, SqliteJournal
+
+    path = journal_path()
+    if not path.exists():
+        if as_json:
+            console.print_json(json.dumps({"transactions": [], "journal": str(path)}))
+        else:
+            console.print("[dim]No transactions recorded: nothing has been applied on this machine.[/]")
+        raise typer.Exit(int(ExitCode.SUCCESS))
+
+    try:
+        journal = SqliteJournal(path)
+    except JournalError as error:
+        _fail(ExitCode.INTERNAL, "Journal unreadable", str(error))
+        return
+
+    try:
+        transactions = journal.list_transactions(limit=limit)
+        incomplete = {t.transaction_id for t in journal.incomplete_transactions()}
+    finally:
+        journal.close()
+
+    if as_json:
+        console.print_json(json.dumps({
+            "journal": str(path),
+            "transactions": [
+                {
+                    "transaction_id": t.transaction_id,
+                    "plan_id": t.plan_id,
+                    "state": t.state.value,
+                    "created_at": t.created_at.isoformat(),
+                    "updated_at": t.updated_at.isoformat(),
+                    "needs_recovery": t.transaction_id in incomplete,
+                }
+                for t in transactions
+            ],
+        }))
+    else:
+        table = Table(show_header=True)
+        table.add_column("Transaction")
+        table.add_column("Plan")
+        table.add_column("State")
+        table.add_column("When")
+        for record in transactions:
+            marker = "[red]![/] " if record.transaction_id in incomplete else ""
+            table.add_row(
+                record.transaction_id, record.plan_id,
+                f"{marker}{record.state.value}", record.updated_at.isoformat(timespec="seconds"),
+            )
+        console.print(table)
+        if incomplete:
+            console.print(
+                f"\n[bold red]{len(incomplete)} transaction(s) were interrupted.[/] The machine may "
+                "hold changes that nothing has recorded as complete."
+            )
+
+    raise typer.Exit(int(ExitCode.RECOVERY_REQUIRED if incomplete else ExitCode.SUCCESS))
 
 
 @app.command(name="exit-codes")

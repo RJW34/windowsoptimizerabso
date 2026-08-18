@@ -159,3 +159,52 @@ def test_no_command_outside_the_withdrawn_set_can_mutate():
     listed = {line.split()[0] for line in help_text.splitlines() if line.startswith(" ") and line.strip()}
     unexpected = listed & {"apply", "plan", "recover", "verify"}
     assert not unexpected, f"mutating lifecycle commands appeared before the executor: {unexpected}"
+
+
+# ---------------------------------------------------------------------------
+# history
+# ---------------------------------------------------------------------------
+
+def test_history_on_a_machine_with_no_journal_is_not_an_error(tmp_path, monkeypatch):
+    monkeypatch.setattr("windowsoptimizerabso.cli.app.journal_path",
+                        lambda: tmp_path / "missing.sqlite3")
+    result = runner.invoke(app, ["history"])
+    assert result.exit_code == int(ExitCode.SUCCESS)
+    assert "nothing has been applied" in result.output
+
+
+def test_history_lists_transactions(tmp_path, monkeypatch):
+    from windowsoptimizerabso.domain.enums import TransactionState
+    from windowsoptimizerabso.journal.sqlite_journal import SqliteJournal
+
+    path = tmp_path / "journal.sqlite3"
+    journal = SqliteJournal(path)
+    transaction_id = journal.begin_transaction(
+        plan_id="plan-1", plan_digest="d", machine_fingerprint="f"
+    )
+    journal.set_transaction_state(transaction_id, TransactionState.SUCCEEDED)
+    journal.close()
+
+    monkeypatch.setattr("windowsoptimizerabso.cli.app.journal_path", lambda: path)
+    payload = json.loads(runner.invoke(app, ["history", "--json"]).output)
+    assert payload["transactions"][0]["transaction_id"] == transaction_id
+    assert payload["transactions"][0]["needs_recovery"] is False
+
+
+def test_history_exits_recovery_required_when_a_transaction_was_interrupted(tmp_path, monkeypatch):
+    """A script must be able to detect a mid-change machine without parsing prose."""
+    from windowsoptimizerabso.domain.enums import TransactionState
+    from windowsoptimizerabso.journal.sqlite_journal import SqliteJournal
+
+    path = tmp_path / "journal.sqlite3"
+    journal = SqliteJournal(path)
+    transaction_id = journal.begin_transaction(
+        plan_id="plan-1", plan_digest="d", machine_fingerprint="f"
+    )
+    journal.set_transaction_state(transaction_id, TransactionState.RUNNING)
+    journal.close()
+
+    monkeypatch.setattr("windowsoptimizerabso.cli.app.journal_path", lambda: path)
+    result = runner.invoke(app, ["history"])
+    assert result.exit_code == int(ExitCode.RECOVERY_REQUIRED)
+    assert "interrupted" in result.output

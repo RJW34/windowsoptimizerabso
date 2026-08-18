@@ -125,6 +125,11 @@ def binary_registry_operation(machine: FakeMachine, *, target_sid: str = USER_SI
             machine.registry.write_value(state)
 
     def check(env: Environment, params: dict[str, Any]) -> Applicability:
+        current = machine.registry.read_value(
+            hive, subkey, value_name, target_sid=env.target_user_sid or target_sid
+        )
+        if current.presence is Presence.PRESENT and current.data == new_mask:
+            return Applicability.satisfied()
         return Applicability.yes()
 
     return OperationSpec(
