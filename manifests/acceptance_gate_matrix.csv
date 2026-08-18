@@ -1,0 +1,13 @@
+gate_id,blocking,name,requirement,evidence,pass_criteria
+G0,yes,Containment,No legacy/remediation command can mutate the normal host during unsafe phases.,"Static guard, CLI tests, command inventory",All direct mutation disabled or routed through unenabled executor.
+G1,yes,Build/package,"Source compiles, imports, builds, installs, and exposes truthful read-only CLI.","compileall, package/CLI tests, wheel smoke",All clean-environment commands return expected status.
+G2,yes,Planner,"Typed allowlisted operations and immutable plans include identity, applicability, risk, evidence, verification, rollback, and digest.",planner unit/golden tests,No arbitrary target via profile; stale plans rejected.
+G3,yes,Journal,"Pre-state durable before apply; transitions, locking, corruption handling, and recovery work.",fault-injection suite,Every lifecycle boundary passes; no uncaptured mutation.
+G4,yes,Verification/rollback,Every retained operation verifies apply and exact reverse-order restore.,contracts and Windows VM equality,No false success; residual drift explicit.
+G5,yes,Module remediation,"Every legacy operation is fixed, redesigned, quarantined, or removed with evidence.",defect-dispositions.json,Zero undisposed known defects.
+G6,yes,Windows VM,Apply/reboot/verify/rollback/reboot passes in supported disposable environments.,VM proof bundle,State equality and recovery proven.
+G7,yes,Security,"Privilege split, SID, trusted subprocesses, reparse defense, drift, locking, redaction pass.",security tests/threat model,No critical security finding.
+G8,yes,Testing,Coverage and all blocking layers pass with no skipped blocker.,coverage/test reports,Thresholds pass.
+G9,yes,Profiles,"Rivals 2/Slippi plans are constrained, session-scoped, evidence-driven.",profile tests/benchmarks,Normal/crash restore; zero-change profile allowed.
+G10,yes,CI/governance,CI/security automation and accurate docs/version/license/support exist.,workflow runs/repo files,Required checks pass; no false docs.
+G11,yes,Final proof,"Independent audit, final report, proof manifest, defect mapping exist.",final artifacts,No unresolved blocking finding.

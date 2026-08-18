@@ -1,0 +1,45 @@
+{
+  "repository": "RJW34/windowsoptimizerabso",
+  "requested_alias": "computa/windowsoptimizerabso",
+  "default_branch": "master",
+  "baseline_commit": "fed422ddc1b5808ad6c98908a96231a98b6ed625",
+  "baseline_commit_message": "Initial commit: Windows Optimizer toolkit",
+  "baseline_commit_timestamp_utc": "2026-01-27T05:57:22Z",
+  "audit_pack_generated_date": "2026-08-17",
+  "baseline_status": {
+    "branches": [
+      "master"
+    ],
+    "pull_requests": 0,
+    "issues": 0,
+    "github_actions_workflows": 0,
+    "tags": 0,
+    "releases": 0,
+    "code_scanning_enabled": false,
+    "dependabot_alerts_enabled": false,
+    "source_importable": false,
+    "safe_for_admin_execution": false
+  },
+  "scope": [
+    ".gitignore",
+    "README.md",
+    "pyproject.toml",
+    "requirements.txt",
+    "src/__init__.py",
+    "src/main.py",
+    "src/core/__init__.py",
+    "src/core/backup.py",
+    "src/core/engine.py",
+    "src/core/registry.py",
+    "src/core/services.py",
+    "src/core/system_info.py",
+    "src/modules/__init__.py",
+    "src/modules/cleanup.py",
+    "src/modules/privacy.py",
+    "src/modules/startup.py",
+    "src/modules/network.py",
+    "src/modules/gaming.py",
+    "src/modules/visual.py"
+  ],
+  "important_note": "This pack is pinned to the commit above. Claude must compare HEAD to this baseline before editing. If HEAD differs, preserve valid changes, re-audit the changed tree, and record the delta."
+}

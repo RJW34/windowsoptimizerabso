@@ -1,0 +1,9 @@
+# Development and test dependencies. Kept in sync with [project.optional-dependencies].dev
+# by tests/test_packaging.py.
+-r requirements.txt
+pytest>=7.4.0
+pytest-cov>=4.1.0
+ruff>=0.1.0
+mypy>=1.5.0
+build>=1.0.0
+tomli>=2.0.0; python_version < "3.11"

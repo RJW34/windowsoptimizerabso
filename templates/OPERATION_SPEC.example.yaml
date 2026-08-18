@@ -1,0 +1,35 @@
+schema_version: 1
+operation_id: gaming.power.session-policy
+display_name: Session-scoped game power policy
+category: gaming
+risk: moderate
+scope: machine
+persistence: session
+requires_admin: true
+requires_reboot: false
+target_user_sid: null
+supported_environment:
+  platform: windows
+  editions: []
+  build_constraints: []
+  architectures: [x86_64, arm64]
+  prerequisites: [active_power_scheme_readable]
+parameters:
+  target_policy:
+    type: enum
+    allowed: [balanced, high_performance]
+conflict_keys: [power.active_scheme]
+dependencies: []
+evidence:
+  status: experimental
+  source_ids: []
+  benchmark_required: true
+lifecycle:
+  inspect: capture_active_power_scheme
+  apply: set_active_power_scheme
+  verify: verify_active_power_scheme
+  rollback: restore_captured_power_scheme
+  verify_rollback: verify_captured_power_scheme
+user_tradeoffs:
+  - May increase power consumption and temperature.
+  - May provide no measurable benefit on modern hardware.

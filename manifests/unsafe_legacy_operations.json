@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "purpose": "Legacy behaviors to remove or quarantine unless current authoritative evidence and exact rollback justify retention.",
+  "operations": [
+    {
+      "legacy": "cleanup_prefetch",
+      "default": "remove",
+      "reason": "Destructive and not a generally valid performance optimization."
+    },
+    {
+      "legacy": "cleanup_logs",
+      "default": "remove_from_profiles",
+      "reason": "Can destroy diagnostic evidence and overlaps targets."
+    },
+    {
+      "legacy": "block_telemetry_hosts",
+      "default": "remove_from_defaults",
+      "reason": "Static stale blocklist, invalid entries, breakage, unsafe rollback."
+    },
+    {
+      "legacy": "disable_bloatware_startup",
+      "default": "remove",
+      "reason": "Broad heuristics disable user-selected applications."
+    },
+    {
+      "legacy": "service_profile_gaming",
+      "default": "remove",
+      "reason": "Can disable Xbox and other required features."
+    },
+    {
+      "legacy": "service_profile_default",
+      "default": "remove",
+      "reason": "Guesses Manual instead of restoring state."
+    },
+    {
+      "legacy": "optimize_tcp_stack",
+      "default": "remove",
+      "reason": "Mislabeled unsupported global registry bundle."
+    },
+    {
+      "legacy": "disable_nagle_global",
+      "default": "remove",
+      "reason": "Wrong scope and no workload evidence."
+    },
+    {
+      "legacy": "optimize_network_adapters",
+      "default": "remove",
+      "reason": "Legacy/unsupported commands and no rollback."
+    },
+    {
+      "legacy": "remove_bandwidth_throttling",
+      "default": "experimental_only",
+      "reason": "Global folklore requires measurement."
+    },
+    {
+      "legacy": "reset_network_stack",
+      "default": "separate_repair_or_remove",
+      "reason": "Destructive repair, not optimization."
+    },
+    {
+      "legacy": "enable_gpu_scheduling_bundle",
+      "default": "redesign",
+      "reason": "Mixes unrelated settings and unsafe HDCP key."
+    },
+    {
+      "legacy": "optimize_nvidia",
+      "default": "remove",
+      "reason": "TDR changes and display-service disablement."
+    },
+    {
+      "legacy": "optimize_memory",
+      "default": "remove",
+      "reason": "Hardcoded cache and unsupported memory folklore."
+    },
+    {
+      "legacy": "reduce_input_lag",
+      "default": "remove_from_performance",
+      "reason": "Changes user preferences globally."
+    },
+    {
+      "legacy": "disable_fullscreen_optimizations_systemwide",
+      "default": "remove",
+      "reason": "Legacy/undocumented global recipe."
+    },
+    {
+      "legacy": "visual_performance_preset",
+      "default": "redesign",
+      "reason": "Guessed defaults and lost rollback state."
+    },
+    {
+      "legacy": "hardcoded_user_preferences_mask",
+      "default": "remove",
+      "reason": "Version/user-specific binary state."
+    },
+    {
+      "legacy": "automatic_high_performance_power",
+      "default": "redesign_experimental",
+      "reason": "Not universally beneficial; needs session restore and benchmark."
+    }
+  ]
+}

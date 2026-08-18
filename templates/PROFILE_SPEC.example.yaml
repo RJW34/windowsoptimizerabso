@@ -1,0 +1,30 @@
+schema_version: 1
+profile_id: rivals-of-aether-2.conservative
+profile_version: 0.1.0
+display_name: Rivals of Aether 2 — Conservative Session Profile
+product:
+  kind: game
+  name: Rivals of Aether 2
+scope: session
+discovery:
+  executable_ids: [rivals2]
+supported_environment:
+  platform: windows
+  architectures: [x86_64]
+operations:
+  - operation_id: gaming.power.session-policy
+    parameters:
+      target_policy: high_performance
+    condition:
+      all: [on_ac_power, benchmark_evidence_positive]
+conflicts:
+  policy: reject
+restore:
+  on_process_exit: true
+  on_tool_restart: recover
+  on_system_boot: recover
+evidence:
+  registry_version: 1
+notes:
+  - OBS/capture settings are preserved.
+  - A zero-change plan is valid when no operation is beneficial.

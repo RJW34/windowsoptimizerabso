@@ -1,157 +1,136 @@
 # Windows Optimizer Absolute (WindowsOptimizerAbso)
 
-A comprehensive Windows optimization toolkit designed for power users who want full control over their system's performance, privacy, and resource management.
+> ## ⚠ PRE-ALPHA — mutation is disabled, and most of this tool does not exist yet
+>
+> An audit of the initial prototype found that its safety claims were substantially ahead of its
+> implementation: `rollback` printed "Rollback complete." without restoring anything, mutating
+> operations captured no exact pre-state, there was no transaction journal, no tests, and no CI.
+>
+> **Every command that changes a machine is currently withdrawn.** Read-only inspection works.
+> What is implemented, what is quarantined and what is still owed is tracked in
+> [`docs/remediation/WORK_LEDGER.md`](docs/remediation/WORK_LEDGER.md) against a register of 143
+> known defects.
+>
+> Do not run this against a machine you care about. Use a disposable VM or Windows Sandbox.
 
-## Features
+## What this is meant to become
 
-### System Cleanup
-- Temporary file removal (Windows Temp, User Temp, Browser caches)
-- Windows Update cleanup
-- Recycle Bin management
-- Thumbnail cache clearing
-- Log file cleanup
-- Prefetch optimization
+A per-game Windows state planner, rather than a universal "optimize everything" script. The
+intended workflow is:
 
-### Privacy & Telemetry Control
-- Disable Windows telemetry and data collection
-- Manage Cortana and search indexing
-- Control advertising ID and personalization
-- Block telemetry hosts via hosts file
-- Scheduled tasks audit and cleanup
+```text
+inspect the machine
+  → decide which operations are applicable to this build and hardware
+  → select a versioned profile
+  → produce a human-readable, immutable plan
+  → capture exact pre-state and make it durable
+  → apply one typed operation
+  → verify the postcondition
+  → keep it, or roll back to the captured state and verify the restoration
+```
 
-### Service Management
-- Disable unnecessary Windows services
-- Service presets (Gaming, Workstation, Minimal, Default)
-- Safe service recommendations with rollback capability
-- Dependency-aware service management
+Rivals of Aether 2 and Slippi are the first intended profile targets. Product work comes after the
+safety core: a tweak that cannot be exactly reverted has no business being offered.
 
-### Startup Optimization
-- Startup program management
-- Scheduled task audit
-- Boot time analysis
-- Shell extension cleanup
+## What works today
 
-### Registry Optimization
-- Registry cleanup and defragmentation
-- Invalid entry removal
-- Orphaned key detection
-- Registry backup and restore
+| Command | Status |
+|---|---|
+| `winopt inspect [--json] [--include-identifiers]` | Works. Read-only machine facts. |
+| `winopt doctor [--json]` | Works. Reports environment readiness and containment state. |
+| `winopt exit-codes [--json]` | Works. Documents the CLI contract. |
+| `winopt version` | Works. |
+| `winopt optimize` / `gaming` / `privacy` / `cleanup` / `visual` / `rollback` | **Withdrawn.** Exits 13 and explains why. |
+| `winopt plan` / `apply` / `verify` / `recover` / `profiles` | **Not implemented yet.** Deliberately absent rather than stubbed. |
 
-### Network Optimization
-- TCP/IP stack optimization
-- DNS cache management
-- Network adapter tuning
-- Bandwidth optimization tweaks
+Inspection is unprivileged, works on non-Windows hosts (reporting what it could not collect), and
+never writes anything.
 
-### Gaming & Performance
-- Game Mode optimization
-- GPU scheduling tweaks
-- Power plan optimization
-- Visual effects management
-- Memory optimization
-- Process priority management
-
-### Backup & Restore
-- Full system state backup before changes
-- Individual module rollback
-- Registry backup/restore
-- Service configuration snapshots
-
-## Installation
+## Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/windowsoptimizerabso.git
+git clone https://github.com/RJW34/windowsoptimizerabso.git
 cd windowsoptimizerabso
-
-# Create virtual environment
-python -m venv venv
-venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python -m src.main
+python -m venv .venv
+.venv\Scripts\activate          # PowerShell/cmd;  source .venv/bin/activate on Linux/macOS
+pip install -e ".[dev]"
+winopt doctor
 ```
 
-## Requirements
+Requires Python 3.10 or newer. Inspection and planning run unprivileged; applying a plan will
+require administrator rights once apply exists.
 
-- Windows 10/11
-- Python 3.10+
-- Administrator privileges (for most operations)
+## Exit codes
 
-## Usage
+Automation can rely on these; they are tested in `tests/test_cli.py`. `winopt exit-codes` prints
+the full table. The governing rule is that a command may not exit 0 unless it did what it said it
+did — skipped, not-applicable, unverified and partial each get their own code.
 
-### GUI Mode
+| Code | Meaning |
+|---:|---|
+| 0 | success, or verified no-op |
+| 2 | usage, input, or schema error |
+| 3 | unsupported platform or capability |
+| 5 | stale plan, machine state drifted |
+| 7 | partial apply or verification failure |
+| 9 | rollback partial or failed |
+| 13 | refused: mutation disabled during remediation |
+
+## Containment
+
+While the transactional core is being built, host mutation is default-deny on four independent
+axes, all of which must pass: `WINOPT_ALLOW_MUTATION` must be set, the platform must be Windows,
+the quarantined prototype additionally requires `WINOPT_UNSAFE_LEGACY`, and any subprocess must
+match a read-only allowlist. Anything unrecognised is treated as mutating.
+
+Those variables exist so the legacy code can be exercised inside a disposable Windows VM during
+porting. Setting them on a real machine gets you the unfixed prototype, which has no pre-state
+capture, no journal, and no working rollback.
+
+## Layout
+
+```text
+src/windowsoptimizerabso/
+├── safety.py         # containment: the single choke point for any host mutation
+├── cli/              # read-only commands and the exit-code contract
+├── inspection/       # read-only machine facts
+└── legacy/           # quarantined prototype: reference material, not a code path
+docs/remediation/     # defect register, work ledger, decision log, target architecture
+manifests/            # machine-readable defect and gate manifests
+tests/                # containment, CLI and packaging proof
+tools/                # static baseline audit
+```
+
+There is no GUI, no `config/`, no `scripts/`, and no registry-cleaner. The baseline README
+advertised all of them.
+
+## Development
+
 ```bash
-python -m src.main --gui
+pip install -e ".[dev]"
+pytest                 # full suite
+ruff check .           # lint (the legacy tree is excluded; see pyproject.toml)
+python tools/static_baseline_audit.py --root . --output audit.json
 ```
 
-### CLI Mode
-```bash
-# Run all safe optimizations
-python -m src.main --optimize all
+## Status and history
 
-# Run specific module
-python -m src.main --module privacy
-
-# Create system backup
-python -m src.main --backup
-
-# Restore from backup
-python -m src.main --restore <backup_id>
-
-# Analyze system without making changes
-python -m src.main --analyze
-```
-
-### Preset Profiles
-```bash
-# Gaming profile - maximum performance
-python -m src.main --profile gaming
-
-# Workstation profile - balanced
-python -m src.main --profile workstation
-
-# Minimal profile - maximum privacy, minimal services
-python -m src.main --profile minimal
-
-# Default profile - restore Windows defaults
-python -m src.main --profile default
-```
-
-## Safety Features
-
-- **Dry Run Mode**: Preview changes before applying
-- **Automatic Backups**: System state saved before modifications
-- **Rollback Support**: Undo any changes made
-- **Safe Defaults**: Conservative defaults, aggressive options opt-in
-- **Dependency Checking**: Won't disable services that others depend on
-
-## Project Structure
-
-```
-windowsoptimizerabso/
-├── src/
-│   ├── core/           # Core engine and utilities
-│   ├── modules/        # Optimization modules
-│   ├── gui/            # GUI components
-│   └── utils/          # Helper utilities
-├── tests/              # Unit and integration tests
-├── docs/               # Documentation
-├── config/             # Configuration files and presets
-└── scripts/            # Standalone scripts
-```
-
-## Contributing
-
-Contributions welcome! Please read CONTRIBUTING.md first.
+- [`docs/remediation/WORK_LEDGER.md`](docs/remediation/WORK_LEDGER.md) — every known defect and its
+  current disposition
+- [`docs/remediation/DECISION_LOG.md`](docs/remediation/DECISION_LOG.md) — where this project
+  deviates from the audit's prescription, and why (including one audit finding that did not
+  reproduce)
+- [`docs/remediation/STATUS_REPORT.md`](docs/remediation/STATUS_REPORT.md) — what is built, what
+  is not, which acceptance gates pass, and the residual-risk register
+- [`manifests/acceptance_gate_matrix.csv`](manifests/acceptance_gate_matrix.csv) — the blocking
+  gates that must pass before any release
+- [`CHANGELOG.md`](CHANGELOG.md) — what changed in this version
 
 ## Disclaimer
 
-This software modifies system settings. While safety measures are in place, use at your own risk. Always maintain backups of important data.
+This software is designed to modify system settings. It is pre-alpha, it is not release-ready, and
+several acceptance gates — including all Windows VM proof — remain open. Keep independent backups.
 
 ## License
 
-MIT License - See LICENSE for details
+MIT. See [LICENSE](LICENSE).

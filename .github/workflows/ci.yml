@@ -1,0 +1,135 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Belt and braces. Containment is default-deny in code, and CI must never be the thing that
+  # lifts it: a runner is a real Windows machine, and a test that mutates it would be testing on
+  # hardware nobody inspected.
+  WINOPT_ALLOW_MUTATION: "0"
+  WINOPT_UNSAFE_LEGACY: "0"
+
+jobs:
+  test:
+    name: test (${{ matrix.os }}, py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is the target platform; Linux proves the read-only paths work off-Windows and
+        # that the platform gate holds (defect BASE-010).
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Compile every module
+        run: python -m compileall -q src
+
+      - name: Test
+        run: pytest -q --cov=windowsoptimizerabso --cov-report=term-missing --cov-report=xml
+
+      - name: Smoke-test the console entry point
+        run: |
+          winopt version
+          winopt doctor
+          winopt inspect --json
+          winopt exit-codes
+
+      - name: Verify mutating commands refuse
+        shell: bash
+        run: |
+          set -u
+          for command in optimize gaming privacy cleanup visual rollback; do
+            set +e
+            winopt "$command" >/dev/null 2>&1
+            code=$?
+            set -e
+            if [ "$code" -ne 13 ]; then
+              echo "::error::winopt $command exited $code, expected 13 (CONTAINED)"
+              exit 1
+            fi
+          done
+          echo "all mutating commands refused with exit 13"
+
+  lint:
+    name: lint and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check .
+      - name: Mypy
+        # The quarantined legacy tree is excluded in pyproject.toml; it is being deleted operation
+        # by operation, not brought up to type-checking standard.
+        run: mypy src/windowsoptimizerabso --ignore-missing-imports
+      - name: Mypy (Windows target)
+        # This job runs on Linux, so the default analysis platform is linux and every
+        # Windows-only branch -- ctypes.windll, winreg -- is checked only through its
+        # `type: ignore`. Windows is the target platform; it has to be checked as such, or the
+        # code that actually touches the machine is the code that is never type-checked.
+        run: mypy src/windowsoptimizerabso --ignore-missing-imports --platform win32
+
+  package:
+    name: build and install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install build
+      - name: Build wheel and sdist
+        run: python -m build
+      - name: Install the wheel into a clean environment and run it
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist/*.whl
+          /tmp/clean/bin/winopt version
+          /tmp/clean/bin/winopt doctor
+      - uses: actions/upload-artifact@v4
+        with:
+          name: distributions
+          path: dist/
+
+  audit:
+    name: static baseline audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run the audit the remediation is measured against
+        run: python tools/static_baseline_audit.py --root . --output audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: static-audit
+          path: audit.json
