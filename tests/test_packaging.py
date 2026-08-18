@@ -9,10 +9,18 @@ requirements, none of which the code imported.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 import pytest
-import tomllib
+
+# ``tomllib`` is stdlib from 3.11, but the package supports 3.10 (requires-python and the CI
+# matrix both say so). Importing it unconditionally made this module fail to collect on 3.10,
+# which aborts the whole run rather than failing one test.
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # pragma: no cover - only the oldest supported interpreter takes this branch
+    import tomli as tomllib
 
 REPO = Path(__file__).resolve().parents[1]
 
