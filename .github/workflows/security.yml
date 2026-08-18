@@ -12,6 +12,9 @@ on:
 permissions:
   contents: read
   security-events: write
+  # CodeQL reads the workflow run it belongs to; without this the action cannot reach the
+  # Actions API and reports "Resource not accessible by integration".
+  actions: read
 
 jobs:
   codeql:
