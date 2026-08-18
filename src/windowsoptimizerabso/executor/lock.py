@@ -46,12 +46,12 @@ def _process_is_alive(pid: int) -> bool:
         import ctypes
 
         PROCESS_QUERY_LIMITED_INFORMATION = 0x1000  # noqa: N806 - Win32 constant
-        handle = ctypes.windll.kernel32.OpenProcess(  # type: ignore[attr-defined]
+        handle = ctypes.windll.kernel32.OpenProcess(  # type: ignore[attr-defined, unused-ignore]
             PROCESS_QUERY_LIMITED_INFORMATION, False, pid
         )
         if not handle:
             return False
-        ctypes.windll.kernel32.CloseHandle(handle)  # type: ignore[attr-defined]
+        ctypes.windll.kernel32.CloseHandle(handle)  # type: ignore[attr-defined, unused-ignore]
         return True
     try:
         os.kill(pid, 0)

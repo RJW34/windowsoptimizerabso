@@ -89,6 +89,12 @@ jobs:
         # The quarantined legacy tree is excluded in pyproject.toml; it is being deleted operation
         # by operation, not brought up to type-checking standard.
         run: mypy src/windowsoptimizerabso --ignore-missing-imports
+      - name: Mypy (Windows target)
+        # This job runs on Linux, so the default analysis platform is linux and every
+        # Windows-only branch -- ctypes.windll, winreg -- is checked only through its
+        # `type: ignore`. Windows is the target platform; it has to be checked as such, or the
+        # code that actually touches the machine is the code that is never type-checked.
+        run: mypy src/windowsoptimizerabso --ignore-missing-imports --platform win32
 
   package:
     name: build and install

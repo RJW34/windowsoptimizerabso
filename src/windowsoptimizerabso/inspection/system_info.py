@@ -164,13 +164,16 @@ def _check_admin() -> bool:
         try:
             import ctypes
 
-            return bool(ctypes.windll.shell32.IsUserAnAdmin())  # type: ignore[attr-defined]
+            return bool(ctypes.windll.shell32.IsUserAnAdmin())  # type: ignore[attr-defined, unused-ignore]
         except (AttributeError, OSError):
             return False
-    try:
-        return os.geteuid() == 0
-    except AttributeError:  # pragma: no cover - platforms without geteuid
+    # Attribute lookup rather than a direct call: os.geteuid does not exist on Windows, so
+    # a direct call is an error when mypy analyses this file as Windows -- which it must, since
+    # Windows is the target platform.
+    geteuid = getattr(os, "geteuid", None)
+    if geteuid is None:  # pragma: no cover - platforms without geteuid
         return False
+    return bool(geteuid() == 0)
 
 
 def _windows_os_facts(notes: list[str]) -> OsFacts:
@@ -180,16 +183,16 @@ def _windows_os_facts(notes: list[str]) -> OsFacts:
         return base
 
     try:  # pragma: no cover - Windows only
-        with winreg.OpenKey(  # type: ignore[attr-defined]
-            winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]
+        with winreg.OpenKey(  # type: ignore[attr-defined, unused-ignore]
+            winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined, unused-ignore]
             r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             0,
-            winreg.KEY_READ | getattr(winreg, "KEY_WOW64_64KEY", 0),  # type: ignore[attr-defined]
+            winreg.KEY_READ | getattr(winreg, "KEY_WOW64_64KEY", 0),  # type: ignore[attr-defined, unused-ignore]
         ) as key:
 
             def read(name: str) -> str | None:
                 try:
-                    return str(winreg.QueryValueEx(key, name)[0])  # type: ignore[attr-defined]
+                    return str(winreg.QueryValueEx(key, name)[0])  # type: ignore[attr-defined, unused-ignore]
                 except OSError:
                     return None
 
