@@ -23,9 +23,9 @@ from __future__ import annotations
 import os
 import platform
 import subprocess
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, Sequence
 
 from loguru import logger
 
@@ -196,7 +196,13 @@ _POWERSHELL_RELATIVE = Path("WindowsPowerShell") / "v1.0" / "powershell.exe"
 
 
 def system_root() -> Path:
-    return Path(os.environ.get("SystemRoot") or os.environ.get("WINDIR") or r"C:\Windows")
+    # noqa: SIM112 below -- these are the names Windows itself sets, and its environment lookup is
+    # case-insensitive, so upper-casing them would be a cosmetic change with no effect.
+    return Path(
+        os.environ.get("SystemRoot")  # noqa: SIM112
+        or os.environ.get("WINDIR")
+        or r"C:\Windows"
+    )
 
 
 def resolve_trusted_executable(name: str) -> str:
@@ -274,7 +280,7 @@ class RunResult:
     """
 
     argv: tuple[str, ...]
-    returncode: Optional[int]
+    returncode: int | None
     stdout: str
     stderr: str
     timed_out: bool
@@ -289,9 +295,9 @@ def guarded_run(
     *,
     timeout: int = DEFAULT_TIMEOUT_SECONDS,
     legacy: bool = True,
-    mutating: Optional[bool] = None,
-    cwd: Optional[Path] = None,
-    extra_env: Optional[dict[str, str]] = None,
+    mutating: bool | None = None,
+    cwd: Path | None = None,
+    extra_env: dict[str, str] | None = None,
 ) -> RunResult:
     """Run a system binary under containment.
 
@@ -334,20 +340,20 @@ def guarded_run(
     # by PATH, PATHEXT or PowerShell profile variables it might otherwise pick up.
     env = {
         "SystemRoot": str(system_root()),
-        "windir": str(system_root()),
+        "windir": str(system_root()),  # noqa: SIM112 - the actual Windows name
         "PATH": str(system_root() / "System32"),
         "TEMP": os.environ.get("TEMP", str(system_root() / "Temp")),
         "TMP": os.environ.get("TMP", str(system_root() / "Temp")),
     }
-    if "SystemDrive" in os.environ:
-        env["SystemDrive"] = os.environ["SystemDrive"]
+    if "SystemDrive" in os.environ:  # noqa: SIM112 - the actual Windows name
+        env["SystemDrive"] = os.environ["SystemDrive"]  # noqa: SIM112
     if extra_env:
         for key, value in extra_env.items():
             if not key.isidentifier():
                 raise ValueError(f"Invalid environment variable name: {key!r}")
             env[key] = value
 
-    child_env: Optional[dict[str, str]]
+    child_env: dict[str, str] | None
     if is_windows():
         child_env = env
     elif extra_env:

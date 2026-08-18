@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, ClassVar, Optional
+from typing import Any, ClassVar
 
 from . import codecs
 from .enums import Presence, RegistryView
@@ -69,7 +69,7 @@ class CapturedState:
     def digest(self) -> str:
         return codecs.digest({"kind": self.kind, "payload": self.to_payload()})
 
-    def equals(self, other: "CapturedState") -> bool:
+    def equals(self, other: CapturedState) -> bool:
         """Exact equality, used to prove a rollback restored the captured state."""
         return (
             type(self) is type(other)
@@ -95,11 +95,11 @@ class RegistryValueState(CapturedState):
     view: RegistryView = RegistryView.NATIVE
     #: The exact Windows type constant name, e.g. ``REG_BINARY``. Never inferred from the data:
     #: an unknown type defaulting to string silently corrupts binary values (defect REG-005).
-    value_type: Optional[str] = None
+    value_type: str | None = None
     data: Any = None
     #: Required when the hive is user-scoped, so an elevated executor writes the interactive
     #: user's hive rather than its own (defects PRV-007, CORE-014).
-    target_sid: Optional[str] = None
+    target_sid: str | None = None
 
     def __post_init__(self) -> None:
         if self.presence is Presence.PRESENT:
@@ -156,9 +156,9 @@ class ServiceState(CapturedState):
 
     name: str
     presence: Presence
-    start_type: Optional[str] = None
-    running: Optional[bool] = None
-    display_name: Optional[str] = None
+    start_type: str | None = None
+    running: bool | None = None
+    display_name: str | None = None
     #: Services that must be running for this one to start. Captured so a restore can order
     #: itself correctly rather than failing halfway (defect SVC-002).
     dependencies: tuple[str, ...] = ()
@@ -213,11 +213,11 @@ class FileState(CapturedState):
 
     path: str
     presence: Presence
-    sha256: Optional[str] = None
-    size_bytes: Optional[int] = None
-    modified_at: Optional[datetime] = None
+    sha256: str | None = None
+    size_bytes: int | None = None
+    modified_at: datetime | None = None
     #: Where the captured content lives in the backup store, if it was archived.
-    content_ref: Optional[str] = None
+    content_ref: str | None = None
 
     def __post_init__(self) -> None:
         if self.presence is Presence.PRESENT and self.sha256 is None:
@@ -259,7 +259,7 @@ class PowerSchemeState(CapturedState):
     kind: ClassVar[str] = "power_scheme"
 
     active_guid: str
-    display_name: Optional[str] = None
+    display_name: str | None = None
 
     def to_payload(self) -> dict[str, Any]:
         return {"active_guid": self.active_guid, "display_name": self.display_name}
@@ -281,8 +281,8 @@ class ScheduledTaskState(CapturedState):
 
     task_path: str
     presence: Presence
-    enabled: Optional[bool] = None
-    definition_xml: Optional[str] = None
+    enabled: bool | None = None
+    definition_xml: str | None = None
 
     def __post_init__(self) -> None:
         if self.presence is Presence.PRESENT and self.enabled is None:
@@ -331,18 +331,18 @@ class StateSet:
             raise codecs.DecodeError("state set is not an array")
         return StateSet(tuple(CapturedState.deserialise(codecs.dumps(b)) for b in blobs))
 
-    def equals(self, other: "StateSet") -> bool:
+    def equals(self, other: StateSet) -> bool:
         return len(self.states) == len(other.states) and all(
-            a.equals(b) for a, b in zip(self.states, other.states)
+            a.equals(b) for a, b in zip(self.states, other.states, strict=True)
         )
 
-    def differences(self, other: "StateSet") -> tuple[str, ...]:
+    def differences(self, other: StateSet) -> tuple[str, ...]:
         """Human-readable description of what does not match, for residual-drift reporting."""
         if len(self.states) != len(other.states):
             return (f"expected {len(self.states)} captured states, found {len(other.states)}",)
         return tuple(
             f"{describe(a)} differs from the captured state"
-            for a, b in zip(self.states, other.states)
+            for a, b in zip(self.states, other.states, strict=True)
             if not a.equals(b)
         )
 

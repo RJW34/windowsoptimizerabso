@@ -10,9 +10,9 @@ import argparse
 import ast
 import hashlib
 import json
-from pathlib import Path
 import py_compile
 import sys
+from pathlib import Path
 from typing import Any
 
 KNOWN_PATTERNS = {

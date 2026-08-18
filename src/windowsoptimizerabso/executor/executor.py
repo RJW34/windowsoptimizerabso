@@ -22,10 +22,11 @@ halfway left half a machine changed with no coordinated response, and a crash le
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from ..backends.protocols import BackendError
 from ..cli.exit_codes import ExitCode
@@ -168,7 +169,7 @@ class Executor:
         *,
         environment: Environment,
         confirmation_digest: str,
-        now: Optional[datetime] = None,
+        now: datetime | None = None,
     ) -> ExecutionReport:
         """Validate, then apply the plan under lock, rolling back on the first failure."""
         plan.validate_for_execution(
@@ -525,7 +526,7 @@ class Executor:
     # -- recovery ----------------------------------------------------------
 
     def recover(
-        self, *, environment: Environment, on_report: Optional[Callable[[ExecutionReport], None]] = None
+        self, *, environment: Environment, on_report: Callable[[ExecutionReport], None] | None = None
     ) -> list[ExecutionReport]:
         """Find interrupted transactions and put the machine back.
 

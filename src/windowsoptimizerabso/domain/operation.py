@@ -12,8 +12,9 @@ declared schema. Nothing external can widen what an operation touches.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional, Protocol
+from typing import Any, Protocol
 
 from .enums import ActivationRequirement, OperationStatus, Risk, Scope
 from .state import StateSet
@@ -70,7 +71,7 @@ class Evidence:
     #: What the user gives up. An operation with no stated tradeoff has usually not been thought
     #: about rather than genuinely having none.
     tradeoffs: str = ""
-    measured_effect: Optional[str] = None
+    measured_effect: str | None = None
 
     @property
     def is_authoritative(self) -> bool:
@@ -91,11 +92,11 @@ class Environment:
     """
 
     os_system: str = "Windows"
-    os_build: Optional[str] = None
-    os_edition: Optional[str] = None
+    os_build: str | None = None
+    os_edition: str | None = None
     is_admin: bool = False
     #: SID of the interactive user, which is not necessarily the elevated account.
-    target_user_sid: Optional[str] = None
+    target_user_sid: str | None = None
     gpu_vendors: tuple[str, ...] = ()
     facts: dict[str, Any] = field(default_factory=dict)
 
@@ -237,13 +238,13 @@ class Outcome:
     finished_at: Any
     applicability: Applicability
     changed: bool = False
-    observed_before: Optional[StateSet] = None
-    observed_after: Optional[StateSet] = None
+    observed_before: StateSet | None = None
+    observed_after: StateSet | None = None
     verified: bool = False
     activation: ActivationRequirement = ActivationRequirement.IMMEDIATE
     #: Structured category, e.g. "permission_denied", "timeout", "not_found". Not a free string:
     #: callers branch on it.
-    error_category: Optional[str] = None
+    error_category: str | None = None
     #: Sanitised, causal detail. Never raw registry data or user paths beyond what was planned.
     detail: str = ""
     #: What rollback could not restore, if anything.

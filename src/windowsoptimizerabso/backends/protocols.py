@@ -15,7 +15,7 @@ Two rules every real implementation must follow:
 
 from __future__ import annotations
 
-from typing import Optional, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from ..domain.enums import RegistryView
 from ..domain.state import (
@@ -45,7 +45,7 @@ class RegistryBackend(Protocol):
         value_name: str,
         *,
         view: RegistryView = RegistryView.NATIVE,
-        target_sid: Optional[str] = None,
+        target_sid: str | None = None,
     ) -> RegistryValueState:
         """Read one value. Returns a state with the appropriate ``Presence`` if it is missing."""
 
@@ -107,7 +107,7 @@ class ScheduledTaskBackend(Protocol):
 
 @runtime_checkable
 class IdentityBackend(Protocol):
-    def interactive_user_sid(self) -> Optional[str]:
+    def interactive_user_sid(self) -> str | None:
         """SID of the logged-on interactive user.
 
         Not the same as the current process's user when running elevated as a different account,
@@ -121,12 +121,12 @@ class Backends:
     def __init__(
         self,
         *,
-        registry: Optional[RegistryBackend] = None,
-        services: Optional[ServiceBackend] = None,
-        files: Optional[FileBackend] = None,
-        power: Optional[PowerBackend] = None,
-        tasks: Optional[ScheduledTaskBackend] = None,
-        identity: Optional[IdentityBackend] = None,
+        registry: RegistryBackend | None = None,
+        services: ServiceBackend | None = None,
+        files: FileBackend | None = None,
+        power: PowerBackend | None = None,
+        tasks: ScheduledTaskBackend | None = None,
+        identity: IdentityBackend | None = None,
     ) -> None:
         self.registry = registry
         self.services = services

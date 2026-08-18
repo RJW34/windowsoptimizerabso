@@ -19,7 +19,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 from . import codecs
 from .enums import ActivationRequirement, Risk, Scope
@@ -124,11 +124,11 @@ class ExecutionPlan:
     #: Redacted machine identity. Applying a plan built for another machine is refused.
     machine_fingerprint: str
     #: The interactive user the plan was built for. User-scoped operations write this SID's hive.
-    target_user_sid: Optional[str]
-    os_build: Optional[str]
+    target_user_sid: str | None
+    os_build: str | None
     operations: tuple[PlannedOperation, ...]
-    profile_id: Optional[str] = None
-    profile_version: Optional[str] = None
+    profile_id: str | None = None
+    profile_version: str | None = None
     schema_version: int = PLAN_SCHEMA_VERSION
     notes: tuple[str, ...] = field(default_factory=tuple)
 
@@ -202,7 +202,7 @@ class ExecutionPlan:
 
     # -- validation --------------------------------------------------------
 
-    def is_expired(self, *, now: Optional[datetime] = None) -> bool:
+    def is_expired(self, *, now: datetime | None = None) -> bool:
         return (now or datetime.now(timezone.utc)) > self.expires_at
 
     def validate_for_execution(
@@ -212,7 +212,7 @@ class ExecutionPlan:
         environment: Environment,
         machine_fingerprint: str,
         confirmation_digest: str,
-        now: Optional[datetime] = None,
+        now: datetime | None = None,
     ) -> None:
         """Every check that must pass before a single mutation is attempted.
 

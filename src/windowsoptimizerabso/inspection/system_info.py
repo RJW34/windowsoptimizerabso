@@ -25,16 +25,19 @@ import socket
 import sys
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 try:  # pragma: no cover - exercised by the dependency-missing path in tests
     import psutil
 
     HAS_PSUTIL = True
 except ImportError:  # pragma: no cover
-    psutil = None  # type: ignore[assignment]
+    psutil = None
     HAS_PSUTIL = False
 
+# typeshed gates every winreg attribute behind sys.platform == "win32", so type checking this
+# module on Linux reports the whole API as missing. The `attr-defined` ignores below are that, not
+# a real absence: every use is guarded by HAS_WINREG at runtime.
 try:  # pragma: no cover - Windows only
     import winreg
 
@@ -63,8 +66,8 @@ def fingerprint(value: str) -> str:
 @dataclass(frozen=True)
 class CpuFacts:
     model: str
-    cores_physical: Optional[int]
-    cores_logical: Optional[int]
+    cores_physical: int | None
+    cores_logical: int | None
     architecture: str
 
 
@@ -95,11 +98,11 @@ class OsFacts:
 
     system: str
     release: str
-    edition: Optional[str] = None
-    display_version: Optional[str] = None
-    build: Optional[str] = None
-    product_name: Optional[str] = None
-    registered_owner: Optional[str] = None  # identifier: redacted by default
+    edition: str | None = None
+    display_version: str | None = None
+    build: str | None = None
+    product_name: str | None = None
+    registered_owner: str | None = None  # identifier: redacted by default
 
 
 @dataclass(frozen=True)
@@ -110,13 +113,13 @@ class SystemFacts:
     os: OsFacts
     is_admin: bool
     python_version: str
-    hostname: Optional[str] = None  # identifier: redacted by default
+    hostname: str | None = None  # identifier: redacted by default
     machine_fingerprint: str = ""
-    cpu: Optional[CpuFacts] = None
-    memory: Optional[MemoryFacts] = None
+    cpu: CpuFacts | None = None
+    memory: MemoryFacts | None = None
     disks: tuple[DiskFacts, ...] = ()
-    boot_time: Optional[datetime] = None
-    uptime_hours: Optional[float] = None
+    boot_time: datetime | None = None
+    uptime_hours: float | None = None
     collection_notes: tuple[str, ...] = field(default=())
 
     @property
@@ -177,16 +180,16 @@ def _windows_os_facts(notes: list[str]) -> OsFacts:
         return base
 
     try:  # pragma: no cover - Windows only
-        with winreg.OpenKey(
-            winreg.HKEY_LOCAL_MACHINE,
+        with winreg.OpenKey(  # type: ignore[attr-defined]
+            winreg.HKEY_LOCAL_MACHINE,  # type: ignore[attr-defined]
             r"SOFTWARE\Microsoft\Windows NT\CurrentVersion",
             0,
-            winreg.KEY_READ | getattr(winreg, "KEY_WOW64_64KEY", 0),
+            winreg.KEY_READ | getattr(winreg, "KEY_WOW64_64KEY", 0),  # type: ignore[attr-defined]
         ) as key:
 
-            def read(name: str) -> Optional[str]:
+            def read(name: str) -> str | None:
                 try:
-                    return str(winreg.QueryValueEx(key, name)[0])
+                    return str(winreg.QueryValueEx(key, name)[0])  # type: ignore[attr-defined]
                 except OSError:
                     return None
 
@@ -219,11 +222,11 @@ def gather() -> SystemFacts:
             f"running on {platform.system()}: Windows-specific facts were not collected"
         )
 
-    cpu: Optional[CpuFacts] = None
-    memory: Optional[MemoryFacts] = None
+    cpu: CpuFacts | None = None
+    memory: MemoryFacts | None = None
     disks: list[DiskFacts] = []
-    boot_time: Optional[datetime] = None
-    uptime_hours: Optional[float] = None
+    boot_time: datetime | None = None
+    uptime_hours: float | None = None
 
     if not HAS_PSUTIL:
         notes.append("psutil is not installed: CPU, memory, disk and uptime facts are unavailable")

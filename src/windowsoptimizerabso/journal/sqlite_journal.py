@@ -27,11 +27,12 @@ from __future__ import annotations
 import os
 import sqlite3
 import uuid
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterator, Optional
+from typing import Any
 
 from ..domain import codecs
 from ..domain.enums import LifecyclePhase, OperationStatus, TransactionState
@@ -71,9 +72,9 @@ class OperationRecord:
     sequence: int
     operation_id: str
     phase: LifecyclePhase
-    status: Optional[OperationStatus]
-    prestate: Optional[StateSet]
-    error_category: Optional[str]
+    status: OperationStatus | None
+    prestate: StateSet | None
+    error_category: str | None
     detail: str
 
     @property
@@ -303,8 +304,8 @@ class SqliteJournal:
         sequence: int,
         phase: LifecyclePhase,
         *,
-        status: Optional[OperationStatus] = None,
-        error_category: Optional[str] = None,
+        status: OperationStatus | None = None,
+        error_category: str | None = None,
         detail: str = "",
     ) -> None:
         with self.transaction() as cursor:
@@ -361,9 +362,9 @@ class SqliteJournal:
     def _append_event(
         cursor: sqlite3.Cursor,
         transaction_id: str,
-        sequence: Optional[int],
-        phase: Optional[LifecyclePhase],
-        state: Optional[TransactionState],
+        sequence: int | None,
+        phase: LifecyclePhase | None,
+        state: TransactionState | None,
         detail: str,
     ) -> None:
         cursor.execute(

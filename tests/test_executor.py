@@ -485,12 +485,11 @@ def test_a_failed_journal_write_leaves_no_partial_row(journal):
     transaction_id = journal.begin_transaction(
         plan_id="p", plan_digest="d", machine_fingerprint=FINGERPRINT
     )
-    with pytest.raises(RuntimeError):
-        with journal.transaction() as cursor:
-            cursor.execute(
-                "UPDATE transactions SET state='running' WHERE transaction_id=?", (transaction_id,)
-            )
-            raise RuntimeError("interrupted mid-write")
+    with pytest.raises(RuntimeError), journal.transaction() as cursor:
+        cursor.execute(
+            "UPDATE transactions SET state='running' WHERE transaction_id=?", (transaction_id,)
+        )
+        raise RuntimeError("interrupted mid-write")
 
     assert journal.get_transaction(transaction_id).state is TransactionState.PREPARED
 

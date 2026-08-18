@@ -20,7 +20,6 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from types import TracebackType
-from typing import Optional
 
 
 class LockError(RuntimeError):
@@ -30,7 +29,7 @@ class LockError(RuntimeError):
 class LockHeld(LockError):
     """Another process holds the lock."""
 
-    def __init__(self, message: str, *, owner_pid: Optional[int] = None) -> None:
+    def __init__(self, message: str, *, owner_pid: int | None = None) -> None:
         super().__init__(message)
         self.owner_pid = owner_pid
 
@@ -46,7 +45,7 @@ def _process_is_alive(pid: int) -> bool:
     if os.name == "nt":  # pragma: no cover - exercised on Windows
         import ctypes
 
-        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000  # noqa: N806 - Win32 constant
         handle = ctypes.windll.kernel32.OpenProcess(  # type: ignore[attr-defined]
             PROCESS_QUERY_LIMITED_INFORMATION, False, pid
         )
@@ -78,7 +77,7 @@ class ExecutionLock:
         self.break_stale = break_stale
         self._acquired = False
 
-    def acquire(self) -> "ExecutionLock":
+    def acquire(self) -> ExecutionLock:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         try:
             self._create()
@@ -135,20 +134,20 @@ class ExecutionLock:
         finally:
             os.close(descriptor)
 
-    def _read_owner(self) -> Optional[dict]:
+    def _read_owner(self) -> dict | None:
         try:
             data = json.loads(self.path.read_text())
         except (OSError, json.JSONDecodeError):
             return None
         return data if isinstance(data, dict) and "pid" in data else None
 
-    def __enter__(self) -> "ExecutionLock":
+    def __enter__(self) -> ExecutionLock:
         return self.acquire()
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc: Optional[BaseException],
-        traceback: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        traceback: TracebackType | None,
     ) -> None:
         self.release()

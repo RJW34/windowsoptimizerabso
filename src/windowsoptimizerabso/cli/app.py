@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -318,7 +317,7 @@ def exit_codes(
     raise typer.Exit(int(ExitCode.SUCCESS))
 
 
-def main(argv: Optional[list[str]] = None) -> None:
+def main(argv: list[str] | None = None) -> None:
     """Console-script entry point."""
     app(args=argv)
 

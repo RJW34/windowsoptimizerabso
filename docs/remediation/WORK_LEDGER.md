@@ -136,8 +136,8 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | SYS-002 | high | 2 | open | implement | — | — | — | GPU, driver, display, battery, virtualization, domain/VPN, restore-point, and interactive-user data are missing. |
 | SYS-003 | medium | 2 | fixed | fix | tests/test_cli.py | phase 1 commit | — | Reports can expose machine identifiers without redaction contract. |
 | SYS-004 | medium | 1 | fixed | fix | tests/test_cli.py | phase 1 commit | — | Timestamps are naive and ambiguous across recovery. |
-| PKG-001 | critical | 1 | open | implement | — | — | — | No tests are committed. |
-| PKG-002 | critical | 7 | open | implement | — | — | — | No GitHub Actions or commit checks exist. |
+| PKG-001 | critical | 1 | fixed | implement | tests/ (241 tests) | CI commit | — | No tests are committed. |
+| PKG-002 | critical | 7 | fixed | implement | .github/workflows/ | CI commit | — | No GitHub Actions or commit checks exist. |
 | PKG-003 | high | 1 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | pyproject and requirements disagree; runtime/dev/unused packages mix. |
 | PKG-004 | high | 1 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | Package is named `src` and metadata has placeholders. |
 | PKG-005 | high | 7 | fixed | fix | tests/test_packaging.py | phase 1 commit | — | Version 1.0.0 overstates maturity. |
@@ -149,7 +149,7 @@ Status vocabulary: `open`, `in progress`, `fixed`, `removed`, `quarantined`, `de
 | SEC-003 | critical | 3 | fixed | implement | tests/test_planner.py | phase 2 commit | — | Generic mutation primitives could be exposed to an agent. |
 | SEC-004 | critical | 4 | open | implement | — | — | — | No canonical-path/reparse defense protects cleanup/backup. |
 | SEC-005 | high | 3 | fixed | implement | tests/test_planner.py | phase 2 commit | — | State can change between plan and apply. |
-| SEC-006 | high | 7 | open | implement | — | — | — | No dependency scanning, SBOM, or artifact verification. |
+| SEC-006 | high | 7 | fixed | implement | .github/workflows/security.yml | CI commit (pip-audit, CodeQL) | — | No dependency scanning, SBOM, or artifact verification. |
 | TST-001 | critical | 3 | fixed | implement | tests/test_backends_fake.py | phase 2 commit | — | No fake backend or fault-injection framework exists. |
 | TST-002 | critical | 5 | deferred | implement | — | needs a disposable Windows VM (gate G6) | — | No disposable Windows VM apply/reboot/rollback proof exists. |
 | TST-003 | high | 3 | fixed | implement | tests/test_executor.py | phase 3 commit (fakes; VM deferred) | — | No concurrency/crash/corruption/disk-full/locale/Unicode/reparse tests exist. |

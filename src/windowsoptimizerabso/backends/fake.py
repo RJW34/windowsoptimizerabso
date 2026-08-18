@@ -16,8 +16,9 @@ permission_denied" and get exactly that, deterministically, with no timing depen
 from __future__ import annotations
 
 import hashlib
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional
+from typing import Any
 
 from ..domain.enums import Presence, RegistryView
 from ..domain.state import (
@@ -27,7 +28,7 @@ from ..domain.state import (
     ScheduledTaskState,
     ServiceState,
 )
-from .protocols import BackendError
+from .protocols import BackendError, Backends
 
 
 @dataclass
@@ -37,11 +38,11 @@ class Fault:
     #: Method name, e.g. "write_value".
     method: str
     #: Substring matched against the target identifier, or None to match any target.
-    target: Optional[str] = None
+    target: str | None = None
     category: str = "permission_denied"
     message: str = "injected fault"
     #: How many matching calls to fail. None means every one.
-    times: Optional[int] = 1
+    times: int | None = 1
     #: Fail *after* performing the mutation, simulating a crash between write and journal update.
     after_effect: bool = False
     _fired: int = field(default=0, init=False)
@@ -71,7 +72,7 @@ class FaultInjector:
         self._faults.append(fault)
         return fault
 
-    def fail(self, method: str, target: Optional[str] = None, **kwargs: Any) -> Fault:
+    def fail(self, method: str, target: str | None = None, **kwargs: Any) -> Fault:
         return self.add(Fault(method=method, target=target, **kwargs))
 
     def check(self, method: str, target: str, *, phase: str = "before") -> None:
@@ -108,7 +109,7 @@ _REGISTRY_TYPES: dict[str, tuple[type, ...]] = {
 class FakeRegistryBackend:
     """In-memory registry keyed by (view, target_sid, hive, subkey, value_name)."""
 
-    def __init__(self, faults: Optional[FaultInjector] = None) -> None:
+    def __init__(self, faults: FaultInjector | None = None) -> None:
         self.faults = faults or FaultInjector()
         self._values: dict[tuple[str, str, str, str, str], tuple[str, Any]] = {}
         self._keys: set[tuple[str, str, str, str]] = set()
@@ -124,7 +125,7 @@ class FakeRegistryBackend:
         data: Any,
         *,
         view: RegistryView = RegistryView.NATIVE,
-        target_sid: Optional[str] = None,
+        target_sid: str | None = None,
     ) -> None:
         """Place a value directly, bypassing guards and faults. Test setup only."""
         self._validate_type(value_type, data)
@@ -133,7 +134,7 @@ class FakeRegistryBackend:
         self._values[(*key, value_name)] = (value_type, data)
 
     def seed_key(self, hive: str, subkey: str, *, view: RegistryView = RegistryView.NATIVE,
-                 target_sid: Optional[str] = None) -> None:
+                 target_sid: str | None = None) -> None:
         self._keys.add(self._key(view, target_sid, hive, subkey))
 
     def snapshot(self) -> dict[str, tuple[str, Any]]:
@@ -149,7 +150,7 @@ class FakeRegistryBackend:
         value_name: str,
         *,
         view: RegistryView = RegistryView.NATIVE,
-        target_sid: Optional[str] = None,
+        target_sid: str | None = None,
     ) -> RegistryValueState:
         target = f"{hive}\\{subkey}\\{value_name}"
         self.faults.check("read_value", target)
@@ -211,7 +212,9 @@ class FakeRegistryBackend:
     # -- internals ---------------------------------------------------------
 
     @staticmethod
-    def _key(view: RegistryView, target_sid: Optional[str], hive: str, subkey: str):
+    def _key(
+        view: RegistryView, target_sid: str | None, hive: str, subkey: str
+    ) -> tuple[str, str, str, str]:
         return (view.value, target_sid or "", hive, subkey)
 
     @staticmethod
@@ -227,7 +230,7 @@ class FakeRegistryBackend:
             raise BackendError(
                 f"{value_type} cannot hold {type(data).__name__}", category="io_error"
             )
-        if value_type == "REG_DWORD" and not 0 <= int(data) <= 0xFFFFFFFF:
+        if value_type == "REG_DWORD" and not 0 <= int(data) <= 0xFFFFFFFF:  # type: ignore[call-overload]
             raise BackendError("REG_DWORD out of range", category="io_error")
 
 
@@ -238,7 +241,7 @@ class FakeRegistryBackend:
 class FakeServiceBackend:
     """In-memory service database with dependency enforcement."""
 
-    def __init__(self, faults: Optional[FaultInjector] = None) -> None:
+    def __init__(self, faults: FaultInjector | None = None) -> None:
         self.faults = faults or FaultInjector()
         self._services: dict[str, ServiceState] = {}
 
@@ -304,7 +307,7 @@ class FakeServiceBackend:
 class FakeFileBackend:
     """In-memory filesystem holding content by path, with an archive store."""
 
-    def __init__(self, faults: Optional[FaultInjector] = None) -> None:
+    def __init__(self, faults: FaultInjector | None = None) -> None:
         self.faults = faults or FaultInjector()
         self._files: dict[str, bytes] = {}
         self._archive: dict[str, bytes] = {}
@@ -357,7 +360,7 @@ class FakeFileBackend:
 
 
 class FakePowerBackend:
-    def __init__(self, faults: Optional[FaultInjector] = None, active: str = "381b4222-guid-balanced") -> None:
+    def __init__(self, faults: FaultInjector | None = None, active: str = "381b4222-guid-balanced") -> None:
         self.faults = faults or FaultInjector()
         self._active = active
 
@@ -372,7 +375,7 @@ class FakePowerBackend:
 
 
 class FakeScheduledTaskBackend:
-    def __init__(self, faults: Optional[FaultInjector] = None) -> None:
+    def __init__(self, faults: FaultInjector | None = None) -> None:
         self.faults = faults or FaultInjector()
         self._tasks: dict[str, ScheduledTaskState] = {}
 
@@ -394,10 +397,10 @@ class FakeScheduledTaskBackend:
 
 
 class FakeIdentityBackend:
-    def __init__(self, sid: Optional[str] = "S-1-5-21-fake-1001") -> None:
+    def __init__(self, sid: str | None = "S-1-5-21-fake-1001") -> None:
         self._sid = sid
 
-    def interactive_user_sid(self) -> Optional[str]:
+    def interactive_user_sid(self) -> str | None:
         return self._sid
 
 
@@ -434,9 +437,7 @@ class FakeMachine:
             "tasks": {p: t.to_payload() for p, t in sorted(self.tasks._tasks.items())},
         }
 
-    def backends(self):
-        from .protocols import Backends
-
+    def backends(self) -> Backends:
         return Backends(
             registry=self.registry,
             services=self.services,

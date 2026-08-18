@@ -10,8 +10,9 @@ a tool ends up looking like it did more than it did.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional, Sequence
+from typing import Any
 
 from ..domain.enums import Risk
 from ..domain.operation import (
@@ -38,7 +39,7 @@ class ConflictError(PlanError):
 class Selection:
     """One operation id plus the parameters a profile supplied for it."""
 
-    def __init__(self, operation_id: str, parameters: Optional[dict[str, Any]] = None) -> None:
+    def __init__(self, operation_id: str, parameters: dict[str, Any] | None = None) -> None:
         self.operation_id = operation_id
         self.parameters = parameters or {}
 
@@ -108,10 +109,10 @@ class Planner:
         *,
         environment: Environment,
         machine_fingerprint: str,
-        profile_id: Optional[str] = None,
-        profile_version: Optional[str] = None,
+        profile_id: str | None = None,
+        profile_version: str | None = None,
         lifetime: timedelta = DEFAULT_PLAN_LIFETIME,
-        now: Optional[datetime] = None,
+        now: datetime | None = None,
     ) -> ExecutionPlan:
         """Produce an immutable plan for ``selections`` against ``environment``.
 

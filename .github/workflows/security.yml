@@ -1,0 +1,58 @@
+name: Security
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    # Weekly, so a newly disclosed advisory in a pinned dependency surfaces without a push.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v3
+
+  dependencies:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pip-audit
+      - name: Audit runtime dependencies
+        run: pip-audit --requirement requirements.txt --strict
+
+  containment:
+    name: containment guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - name: Containment tests must pass on their own
+        # Run separately from the main suite so that a change which weakens containment fails a
+        # dedicated, obviously-named check rather than being one red dot among hundreds.
+        run: pytest tests/test_containment.py -q
+      - name: No new unguarded mutation primitives
+        run: |
+          pytest -q \
+            tests/test_containment.py::test_subprocess_is_reachable_only_through_the_safety_layer \
+            tests/test_containment.py::test_winreg_is_imported_only_where_registry_access_belongs \
+            tests/test_containment.py::test_no_supported_module_imports_the_legacy_tree
